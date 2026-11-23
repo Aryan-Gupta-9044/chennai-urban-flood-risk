@@ -1,0 +1,5 @@
+# Not needed for this first package. Installed later when those modules are added.
+xgboost
+shap
+tensorflow
+pysheds

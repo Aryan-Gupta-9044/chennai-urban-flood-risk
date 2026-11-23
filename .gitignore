@@ -1,0 +1,62 @@
+﻿# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+*credentials*.json
+*service-account*.json
+*private-key*
+*token*
+secrets/
+credentials/
+
+# Earth Engine and local caches
+cache/
+.cache/
+logs/
+*.log
+
+# Backups
+*_backup/
+_hydrology_integration_backup/
+_m3_integration_backup/
+
+# Raw and large geospatial data
+data/raw/
+data/processed/
+data/external/
+*.tif
+*.tiff
+*.grd
+*.nc
+*.hdf
+*.h5
+*.zip
+
+# Generated temporary files
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# Keep output documentation and selected small results
+outputs/*
+!outputs/figures/
+!outputs/tables/
+!outputs/reports/
+!outputs/figures/.gitkeep
+!outputs/tables/.gitkeep
+!outputs/reports/.gitkeep
+
+# Local IDE files
+.vscode/
+.idea/

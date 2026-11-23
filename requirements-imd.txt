@@ -1,0 +1,2 @@
+# Optional: needed only to read IMD NetCDF4/HDF5 files (NetCDF3 is read via scipy). Not needed for the .grd path.
+netCDF4>=1.6

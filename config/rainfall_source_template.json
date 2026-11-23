@@ -1,0 +1,17 @@
+{
+  "_comment": "Copy to data/external/rainfall/<source_id>/source.json and fill in from the provider documentation. Daily files go next to it. 'day_definition' must be stated (or UNCONFIRMED, which downgrades the run to PARTIALLY COMPLETED).",
+  "source_id": "FILL_ME",
+  "name": "FILL_ME",
+  "version": "FILL_ME",
+  "product_type": "gauge-gridded | satellite-blended | reanalysis",
+  "unit": "mm",
+  "accumulation_hours": null,
+  "day_definition": "FILL_ME (e.g. 'UTC calendar day' or 'observing day ending 08:30 IST')",
+  "file_pattern": "{date:%Y%m%d}.tif",
+  "expected_crs": "EPSG:4326",
+  "nodata": null,
+  "native_resolution": "FILL_ME (e.g. '0.05 deg')",
+  "obtained_from": "FILL_ME (URL / description)",
+  "obtained_on": "YYYY-MM-DD",
+  "licence_note": "FILL_ME"
+}

@@ -1,0 +1,15 @@
+{
+  "_comment": "CANDIDATE roles from Agent 1 / the user's master prompt. They are NOT confirmed hydrological labels. Engineering checks only verify that a scene exists and has compatible geometry.",
+  "reference_geometry": {"platform": "SENTINEL-1A", "pass": "DESCENDING", "rel_orbit": 92, "reference_scene": "S1A_IW_GRDH_1SDV_20151112T003120_20151112T003149_008564_00C241_37E8"},
+  "event_dates": {"first_wave_note": "12 Nov 2015 = first-wave flood observation (not a dry baseline)", "main_rain_flood_peak_approx": "2015-12-01"},
+  "candidates": [
+    {"date": "2015-08-20", "role": "candidate dry reference", "category": "dry-candidate"},
+    {"date": "2015-09-01", "role": "candidate dry reference (used in earlier UNOSAT comparison)", "category": "dry-candidate"},
+    {"date": "2015-10-19", "role": "sensitivity observation", "category": "sensitivity"},
+    {"date": "2015-10-31", "role": "sensitivity observation", "category": "sensitivity"},
+    {"date": "2015-11-12", "role": "first-wave flood observation (existing pinned scene)", "category": "known-flood"},
+    {"date": "2015-11-24", "role": "November-wave / post-disaster observation", "category": "uncertain"},
+    {"date": "2015-12-06", "role": "December post-peak observation (~5 days after 1 Dec peak; NOT peak)", "category": "post-peak"},
+    {"date": "2015-12-18", "role": "later persistence/recession candidate (NOT confirmed recovery)", "category": "uncertain"}
+  ]
+}

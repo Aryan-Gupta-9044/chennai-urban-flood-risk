@@ -1,0 +1,16 @@
+# Dataset source register
+"Verified" = I opened the page in this session. "Not re-verified" = relied on prior knowledge/V1 design; site not reachable from my sandbox.
+| Need | Source | What was verified | Caveats / decision |
+|---|---|---|---|
+| Ward boundaries | DataMeet `Municipal_Spatial_Data/Chennai/Wards.geojson` (GitHub) | File downloaded in sandbox: 201 polygons, 200 numbered wards. DataMeet thread describes a *pre-Oct-2011* ward file traced by a volunteer from a CMDA map (licence not stated) | Vintage of our file unverified; keep for now, compare with official list. No replacement made |
+| Ward boundaries (official) | Greater Chennai Corporation GIS / ward lists; OpenCity "Chennai ward Area Sabha maps" | Existence of GCC GIS server mentioned in DataMeet thread; OpenCity page appeared in search results but could not be opened (blocked) | Need official file or list to check ward numbers/zones; ask GCC or request via RTI if not public |
+| Ward delimitation history | DTNext, 23 Dec 2018 | 200 divisions kept; 119 boundaries modified; some numbers changed | Ward numbers differ by vintage: critical for joining population data |
+| DEM | Copernicus GLO-30 on AWS Open Data | Not re-verified | Surface model. Option to evaluate: bare-earth-corrected DEM (check licence). Keep GLO-30 until a comparison justifies change |
+| Rainfall | CHIRPS v2.0 daily 0.05 deg (CHC UCSB) | Not re-verified | ~5 km; use IMERG as a cross-check later if needed |
+| Land cover | ESA WorldCover 10 m, 2021 v200 (AWS) | Not re-verified | 2021 map used for 2015 events too (temporal mismatch noted) |
+| Sentinel-1 scenes | ASF Search API (catalogue); Google Earth Engine `COPERNICUS/S1_GRD` (processing) | ASF/GEE not reachable from sandbox | Check scene exists in both |
+| Flood reference 2015 | UNOSAT Chennai flood map (S1 12 Nov 2015 + Landsat-8 14 Oct 2015; "probable standing water"; CC BY-NC-SA 3.0; not field-validated). Sentinel-Asia: ALOS-2 PALSAR-2 3 & 9 Dec 2015 (AIT, IWMI, U. Tokyo; mostly JPEG/PDF). Charter activation 2 Dec 2015 (ISRO; 8 products dated 4 Dec) | Verified pages | UNOSAT is S1-based => not independent of our labels |
+| Flood reference 2021 | Sentinel-Asia: ALOS-2 8 Nov 2021 (AIT), ALOS-2 pre/post scenes 8 & 12 Nov (JAXA), S1 16 Nov 2021 (MBRSC, incl. flood vector ZIP), FORMOSAT-5 16 & 22 Nov | Verified page | Check licence/terms per product; ALOS-2 is independent of S1 |
+| Flood reference 2023 | NRSC/ISRO map no. 2023/CY/TN/01a/07122023: RISAT-1A MRS, pre 5 Nov, post 7 Dec 2023, marked "For Official Use", preliminary, no ground verification, PDF | Verified document | Use only as visual/agreement comparison; confirm permission to cite/use |
+| Flood reference 2023 (points) | IITM chennaiwaterlogging.org crowd-sourced depth logs (about 1,200 users on 4-5 Dec 2023) | Verified via news article; data export not confirmed | Ask IITM for an archive; point data only, reporting bias toward populated/connected areas |
+| Literature on same events | Water (MDPI) 2024, 16(17), 2477: RISAT-1A 12 Nov 2015 and EOS-04 7 Dec 2023, GEE + CART; its own samples used for accuracy; data "on request" | Verified | Their accuracy (0.96 / 0.91) is on their own samples, not independent; do not quote as validation of our work |

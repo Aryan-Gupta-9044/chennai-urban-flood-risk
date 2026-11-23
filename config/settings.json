@@ -1,0 +1,44 @@
+{
+  "project": "Integrated Geospatial Framework for Urban Flood Risk Mapping and Prediction (B794)",
+  "place_query": "Chennai, Tamil Nadu, India",
+  "fallback_bbox_wgs84": [80.06, 12.83, 80.35, 13.24],
+  "analysis_epsg": 32644,
+  "grid_resolution_m": 30,
+  "expected_area_km2_range": [300, 800],
+  "wards": {
+    "github_api": "https://api.github.com/repos/datameet/Municipal_Spatial_Data/contents/Chennai",
+    "raw_base": "https://raw.githubusercontent.com/datameet/Municipal_Spatial_Data/master/Chennai/",
+    "guess_files": ["Chennai_wards.geojson", "Chennai_ward.geojson", "chennai_wards.geojson", "wards.geojson", "Wards.geojson"],
+    "note": "GCC is commonly cited as having 200 wards (post-2011 expansion); older datasets may have 155. Verify the vintage of whatever file is used."
+  },
+  "dem": {
+    "name": "Copernicus GLO-30 DSM (AWS Open Data)",
+    "url_template": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_{tile}_DEM/Copernicus_DSM_COG_10_{tile}_DEM.tif"
+  },
+  "landcover": {
+    "name": "ESA WorldCover 2021 v200 (AWS Open Data)",
+    "url_template": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_{tile}_Map.tif"
+  },
+  "rainfall": {
+    "name": "CHIRPS v2.0 daily 0.05 deg",
+    "url_template": "https://data.chc.ucsb.edu/products/CHIRPS-2.0/global_daily/tifs/p05/{year}/chirps-v2.0.{year}.{month:02d}.{day:02d}.tif.gz",
+    "sample_start": "2023-11-28",
+    "sample_end": "2023-12-08",
+    "event_start": "2023-12-03",
+    "event_end": "2023-12-05",
+    "note": "Initial small sample around the Dec 2023 Michaung event. Not a full rainfall archive."
+  },
+  "flood_events": [
+    {"id": "2015_dec", "name": "2015 Chennai floods", "approx_period": "2015-11-08 to 2015-12-05 (peak ~1-2 Dec)",
+     "s1_pre": ["2015-10-15", "2015-11-05"], "s1_post": ["2015-12-01", "2015-12-14"],
+     "notes": "Windows are PROPOSED, not verified. Sentinel-1 coverage over Chennai in 2015 must be checked (sparse revisit)."},
+    {"id": "2021_nov", "name": "2021 northeast-monsoon floods", "approx_period": "2021-11-06 to 2021-11-20",
+     "s1_pre": ["2021-10-20", "2021-11-04"], "s1_post": ["2021-11-08", "2021-11-22"],
+     "notes": "Windows are PROPOSED, not verified."},
+    {"id": "2023_dec", "name": "2023 Cyclone Michaung floods", "approx_period": "2023-12-03 to 2023-12-06",
+     "s1_pre": ["2023-11-15", "2023-11-30"], "s1_post": ["2023-12-04", "2023-12-12"],
+     "notes": "Intended as the unseen test event. Windows are PROPOSED, not verified."}
+  ],
+  "flood_detection": {"diff_threshold_db": -3.0, "post_max_db": -15.0, "max_slope_deg": 5.0, "min_water_occurrence_pct": 10},
+"gee": {"project": "sylvan-mode-481804-f7", "comment": "Set your Google Cloud project id here after one-time authentication (see README)."},  "ml": {"random_state": 42, "n_estimators": 200, "max_train_samples": 100000, "min_samples_per_class": 200, "block_size_m": 2000, "neg_pos_ratio": 5}
+}

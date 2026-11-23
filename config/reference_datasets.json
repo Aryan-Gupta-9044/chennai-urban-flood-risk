@@ -1,0 +1,28 @@
+{
+  "_comment": "Independent-reference READINESS register. Entries come from Agent 1's list in the milestone prompt. NOTHING here has been downloaded or verified by SHIVE. 'UNCONFIRMED' = not established; do not fill from memory. Update only from Agent 1 / the actual file.",
+  "datasets": [
+    {"id": "alos2_20151203", "name": "ALOS-2/PALSAR-2 flood extent", "obs_date": "2015-12-03", "sensor_family": "L-band SAR (not Sentinel-1)", "independent_of_s1": true,
+     "format": "UNCONFIRMED", "crs": "UNCONFIRMED", "extent": "UNCONFIRMED", "kind": "UNCONFIRMED", "access": "NOT YET OBTAINED", "licence": "UNCONFIRMED"},
+    {"id": "risat1_20151203_04_06", "name": "RISAT-1 flood products", "obs_date": "2015-12-03, 2015-12-04, 2015-12-06", "sensor_family": "C-band SAR (not Sentinel-1)", "independent_of_s1": true,
+     "format": "UNCONFIRMED", "crs": "UNCONFIRMED", "extent": "UNCONFIRMED", "kind": "UNCONFIRMED", "access": "NOT YET OBTAINED", "licence": "UNCONFIRMED"},
+    {"id": "radarsat2_20151204", "name": "RADARSAT-2 flood/recession product", "obs_date": "2015-12-04", "sensor_family": "C-band SAR (not Sentinel-1)", "independent_of_s1": true,
+     "format": "UNCONFIRMED", "crs": "UNCONFIRMED", "extent": "UNCONFIRMED", "kind": "UNCONFIRMED", "access": "NOT YET OBTAINED", "licence": "UNCONFIRMED"},
+    {"id": "nrsc_bhuvan_ndem", "name": "NRSC / Bhuvan / NDEM inundation products", "obs_date": "UNCONFIRMED", "sensor_family": "UNCONFIRMED", "independent_of_s1": null,
+     "format": "UNCONFIRMED", "crs": "UNCONFIRMED", "extent": "UNCONFIRMED", "kind": "UNCONFIRMED", "access": "NOT YET OBTAINED", "licence": "UNCONFIRMED"},
+    {"id": "unosat_iwmi_nov", "name": "UNOSAT and IWMI November flood products", "obs_date": "UNCONFIRMED (November 2015)", "sensor_family": "Sentinel-1 derived (per project notes)", "independent_of_s1": false,
+     "format": "UNCONFIRMED", "crs": "UNCONFIRMED", "extent": "UNCONFIRMED", "kind": "UNCONFIRMED", "access": "NOT YET OBTAINED", "licence": "UNCONFIRMED"},
+    {"id": "adyar_depth_obs", "name": "Published Adyar basin flood-depth observations", "obs_date": "UNCONFIRMED", "sensor_family": "field / survey observations", "independent_of_s1": true,
+     "format": "UNCONFIRMED", "crs": "UNCONFIRMED", "extent": "Adyar basin only (partial AOI)", "kind": "point/table expected (unconfirmed)", "access": "NOT YET OBTAINED", "licence": "UNCONFIRMED"},
+    {"id": "opencity_gcc_flood_points", "name": "OpenCity / GCC flood points", "obs_date": "UNCONFIRMED", "sensor_family": "administrative / crowd-reported points", "independent_of_s1": true,
+     "format": "UNCONFIRMED", "crs": "UNCONFIRMED", "extent": "UNCONFIRMED", "kind": "point expected (unconfirmed)", "access": "NOT YET OBTAINED", "licence": "UNCONFIRMED"}
+  ],
+  "ingest_requirements": [
+    "georeferenced raster or vector with a stated CRS (a PDF/JPEG map is qualitative until georeferenced; digitising adds its own error)",
+    "stated observation date/time (and time of day) distinct from the Sentinel-1 acquisition date",
+    "spatial extent covering the study area, or a documented partial extent",
+    "documented class meaning (flooded / not flooded / unknown / permanent water / no data)",
+    "documented production method, so independence from Sentinel-1 can be judged",
+    "licence permitting use and redistribution of derived statistics",
+    "known or estimated positional accuracy"
+  ]
+}

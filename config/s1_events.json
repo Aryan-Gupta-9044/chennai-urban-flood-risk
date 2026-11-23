@@ -1,0 +1,108 @@
+{
+  "_comment": "Sentinel-1 event definitions (V2). Windows are PROPOSALS to be checked with scripts/s1_availability.py. 'peak' = approximate date of heaviest flooding; verify against official sources before relying on it.",
+  "params": {
+    "diff_threshold_db": -3.0,
+    "post_max_db": -15.0,
+    "pre_water_db": -18.0,
+    "max_slope_deg": 5.0,
+    "min_water_occurrence_pct": 10,
+    "speckle_radius_m": 30,
+    "min_cluster_pixels": 8
+  },
+  "events": [
+    {
+      "id": "2015_nov",
+      "name": "Chennai floods 2015 - November wave (S1 evidence: 12 Nov 2015 per UNOSAT)",
+      "peak": "2015-11-10",
+      "pre": [
+        "2015-08-15",
+        "2015-11-05"
+      ],
+      "post": [
+        "2015-11-10",
+        "2015-11-20"
+      ],
+      "role": "exploratory",
+      "notes": "Peak flooding was 1-2 Dec 2015; Sentinel-1 evidence found only for 12 Nov 2015. Single satellite (S1A) in 2015.",
+      "scene_ids": {
+        "pre": [
+          "S1A_IW_GRDH_1SDV_20150820T003130_20150820T003159_007339_00A149_A6BE",
+          "S1A_IW_GRDH_1SDV_20150901T003130_20150901T003159_007514_00A615_1A84",
+          "S1A_IW_GRDH_1SDV_20151019T003131_20151019T003200_008214_00B8EF_82E0",
+          "S1A_IW_GRDH_1SDV_20151031T003131_20151031T003200_008389_00BD95_33F3"
+        ],
+        "post": [
+          "S1A_IW_GRDH_1SDV_20151112T003120_20151112T003149_008564_00C241_37E8"
+        ]
+      },
+      "orbit": {
+        "direction": "DESCENDING",
+        "rel_orbit": 92
+      },
+      "scene_ids_source": "ASF catalogue + Earth Engine COPERNICUS/S1_GRD exact system:index match, verified live on the user's Windows machine (outputs/tables/s1_gee_availability_2015_nov.csv)"
+    },
+    {
+      "id": "2015_dec",
+      "name": "Chennai floods 2015 - December peak",
+      "peak": "2015-12-02",
+      "pre": [
+        "2015-10-15",
+        "2015-11-05"
+      ],
+      "post": [
+        "2015-12-02",
+        "2015-12-14"
+      ],
+      "role": "exploratory",
+      "notes": "Public flood products for the Dec peak used ALOS-2 (3 Dec) not Sentinel-1; S1 coverage UNKNOWN until probed."
+    },
+    {
+      "id": "2021_nov",
+      "name": "Chennai floods Nov 2021",
+      "peak": "2021-11-11",
+      "pre": [
+        "2021-10-10",
+        "2021-11-04"
+      ],
+      "post": [
+        "2021-11-11",
+        "2021-11-24"
+      ],
+      "role": "candidate-first",
+      "notes": "Sentinel-Asia lists a Sentinel-1 product of 16 Nov 2021 (MBRSC) and ALOS-2 products of 8 and 12 Nov 2021 (independent L-band cross-check)."
+    },
+    {
+      "id": "2023_dec",
+      "name": "Cyclone Michaung Dec 2023",
+      "peak": "2023-12-04",
+      "pre": [
+        "2023-10-20",
+        "2023-11-30"
+      ],
+      "post": [
+        "2023-12-04",
+        "2023-12-14"
+      ],
+      "role": "candidate-test-event",
+      "notes": "Only Sentinel-1A operated in 2023 (12-day repeat per orbit): a pass within days of 4-5 Dec is NOT guaranteed. NRSC RISAT-1A map of 7 Dec 2023 and EOS-04 7 Dec scene exist as comparison products."
+    }
+  ],
+  "s1b_params": {
+    "_comment": "S1B (V2.2) parameters. Starting values from the SAR flood-mapping literature, NOT tuned for Chennai and NOT validated. Override on the command line with --set name=value; every run records its parameters and a hash.",
+    "speckle_filter": "focal_median",
+    "speckle_radius_m": 30,
+    "composite": "median",
+    "min_pre_obs": 3,
+    "diff_threshold_db": -3.0,
+    "post_max_db": -15.0,
+    "pre_water_db": -18.0,
+    "min_water_occurrence_pct": 10,
+    "max_slope_deg": 5.0,
+    "max_hand_m": null,
+    "hand_diagnostic_m": 15.0,
+    "use_std_test": false,
+    "std_k": 2.0,
+    "min_cluster_pixels_10m": 8,
+    "flood_fraction_threshold": 0.5
+  }
+}

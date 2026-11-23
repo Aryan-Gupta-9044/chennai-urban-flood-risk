@@ -1,0 +1,55 @@
+{
+ "_comment": "Candidate rainfall sources for the 2015 event. Values marked (expected) are general expectations to be CONFIRMED from the provider documentation before use; nothing here has been downloaded. Source selection is pending the user's/Agent 1's decision. No download logic exists for any source yet.",
+ "sources": [
+  {
+   "source_id": "chirps_v2_daily_p05",
+   "product_type": "satellite-blended (gauge-adjusted)",
+   "native_resolution": "0.05 deg (expected)",
+   "unit": "mm/day (expected)",
+   "day_definition": "UNCONFIRMED",
+   "record_start": "1981 (expected)",
+   "anomaly_baseline": "feasible if multi-decade same-source record is obtained",
+   "existing_code": "scripts/process_rainfall.py downloads daily files (2023 sample only); previous download failures were never diagnosed",
+   "cautions": "5 km cells: only a few cells intersect Chennai; smooths convective extremes"
+  },
+  {
+   "source_id": "imd_gridded_daily",
+   "product_type": "gauge-gridded",
+   "native_resolution": "0.25 deg (expected; confirm which IMD grid)",
+   "unit": "mm/day (expected)",
+   "day_definition": "UNCONFIRMED (observing-day convention differs from UTC calendar days)",
+   "record_start": "UNCONFIRMED",
+   "existing_code": "none",
+   "cautions": "coarser; gauge density and format (binary/NetCDF) to be confirmed; licence/access to be confirmed"
+  },
+  {
+   "source_id": "era5_or_era5land",
+   "product_type": "reanalysis",
+   "native_resolution": "0.25 deg (ERA5) / 0.1 deg (ERA5-Land) (expected)",
+   "unit": "m of water, ACCUMULATED over a forecast window (expected)",
+   "day_definition": "UNCONFIRMED (expected UTC-based; accumulations need de-accumulation, source-specific logic NOT implemented)",
+   "record_start": "1940 (ERA5, expected)",
+   "existing_code": "none",
+   "cautions": "model precipitation, not an observation; known to differ from gauges for extremes"
+  },
+  {
+   "source_id": "chirps_v3_daily",
+   "product_type": "satellite-blended (IMERG Late V07 disaggregation of station-adjusted pentads; DAILY_SAT)",
+   "native_resolution": "0.05 deg (verified live: EPSG:4326, Earth Engine grid 0.0500000007 deg)",
+   "unit": "mm/d (per Earth Engine catalog)",
+   "day_definition": "PROVISIONAL / NOT VERIFIED (daily labels are disaggregation labels, not verified local observation-day windows)",
+   "record_start": "1981 (catalog)",
+   "earth_engine_id": "UCSB-CHC/CHIRPS/V3/DAILY_SAT",
+   "doi": "10.15780/G2JQ0P",
+   "licence": "DISCREPANCY: Earth Engine says public domain, CHC says CC BY 4.0; attribute under CC BY 4.0",
+   "existing_code": "scripts/probe_chirps_coverage.py (live probe PASSED: 153/153 dates, 29 AOI cells, 100% AOI-area coverage), scripts/fetch_chirps_rainfall.py, scripts/prepare_chirps_rainfall.py",
+   "cautions": "not independent of gauges; not validated; ~5.5 km cells (29 cover the AOI); DAILY_RNL not examined and never combined with SAT"
+  }
+ ],
+ "comparison_rules": [
+  "Do not mix sources in one time series, event total, climatology or anomaly.",
+  "Compare sources only side by side on their own native grids, with units, day definitions and resolution stated.",
+  "An anomaly needs a same-source, same-grid, multi-year same-calendar-window baseline (default >= 10 years); otherwise it is not computed.",
+  "Resampling to 30 m adds no information: label it 'resampled from native' everywhere."
+ ]
+}
