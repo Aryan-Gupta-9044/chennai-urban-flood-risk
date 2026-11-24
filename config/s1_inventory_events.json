@@ -1,0 +1,11 @@
+{
+  "_comment": "Search windows for scripts/s1_inventory.py --event <id>. Windows are PROPOSALS (metadata search only); they do not assert that any flood occurred on any date. No acquisition date below is assumed correct: 'claimed_dates' are third-party statements to be checked against the returned inventory.",
+  "events": {
+    "2015_dec": {"start": "2014-10-01", "end": "2015-12-21", "uses_candidate_roles": true,
+                  "note": "Same scope as the original S1I run; candidate roles come from config/s1_candidate_roles.json and are NOT confirmed baselines."},
+    "2021_nov": {"start": "2021-09-01", "end": "2021-12-01", "uses_candidate_roles": false,
+                  "reference_geometry": null,
+                  "claimed_dates": [{"date": "2021-11-16", "claim": "Sentinel-1 product listed by Sentinel-Asia (MBRSC) - UNVERIFIED"}],
+                  "note": "Event window (Nov 2021) plus a pre-event period from 1 Sep 2021. S1A and S1B both queried (no platform filter). The 2021 event selection remains CONDITIONAL on independent evidence."}
+  }
+}

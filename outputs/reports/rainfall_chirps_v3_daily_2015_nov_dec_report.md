@@ -1,0 +1,16 @@
+# Rainfall workflow report - chirps_v3_daily / 2015_nov_dec
+
+**Rainfall from the stated source only. No value was filled, interpolated or set to zero. Window dates are PROPOSED, not confirmed.**
+
+- Source: CHIRPS v3 DAILY_SAT (UCSB-CHC/CHIRPS/V3/DAILY_SAT) via Google Earth Engine, native-grid window (version CHIRPS v3.0 DAILY_SAT; manifest sha256 9e039eda99a3, satellite-blended (IMERG Late V07 disaggregation of station-adjusted pentads); not independent of gauges); obtained from: Google Earth Engine UCSB-CHC/CHIRPS/V3/DAILY_SAT; official archive https://data.chc.ucsb.edu/products/CHIRPS/v3.0/ on 2026-11-23; licence note: DISCREPANCY: Earth Engine catalog says public domain (CC0-style waiver); CHC page says CC BY 4.0. Attribute under CC BY 4.0 (stricter). Citation: Climate Hazards Center Infrared Precipitation with Stations version 3, CHIRPS3 Data Repository, doi:10.15780/G2JQ0P (2025); Funk et al. (2026) Sci Data 13, 718, doi:10.1038/s41597-026-07096-4.
+- Unit in files: mm -> converted to mm. Day definition: **PROVISIONAL / NOT VERIFIED: CHIRPS v3 daily values are pentad totals split into days using IMERG Late V07 (SAT). Daily date labels are consistent labels from that disaggregation, NOT verified local (IST) observation-day windows.** (UNCONFIRMED/PROVISIONAL: day-label convention not verified against local observation windows).
+- Data completeness: 153 of 153 context-window days OK (valid file, AOI coverage >= 95%) - the daily data are COMPLETE. Overall run status: PARTIALLY COMPLETED - solely because the day definition is provisional (a convention caveat, NOT missing data).
+- Native grid: EPSG:4326, 7x10 cells, resolution 0.05 deg (native; Earth Engine grid 0.0500000007 deg); the files are a clipped window of the native grid, not resampled. Native cells intersecting the study area: 29 (convention: any positive-area overlap with the AOI polygon; weights = exact intersection area / AOI area, so boundary slivers count with their true small weight). Share of the AOI inside the raster extent: 100.0%. Rainfall varies across the AOI only at this cell size.
+- Context window 2015-07-21..2015-12-20: 153 days; OK 153; missing 0; unreadable 0; incomplete coverage 0 (min coverage 95%).
+- Event window (proposed) 2015-11-08..2015-12-05: event total **COMPUTED (all event-window days valid)**.
+- Event total AOI-weighted mean 1122.3 mm; min/max cell 908.3/1236.6 mm.
+- Resampling to the master grid: not requested.
+- Anomaly / comparison: **NOT COMPUTED** - requires a same-source, same-grid multi-year same-calendar-window record (>= 10 years) that has not been supplied.
+- Antecedent totals: prior-N-day window = the N labelled days D-N..D-1 for Sentinel-1 date D (the label D itself is EXCLUDED); a window with any missing/unusable day is NOT computed (empty, never a partial sum, never zero-filled). Sentinel-1 acquisition ~00:31 UTC / ~06:01 IST. WARNING: the CHIRPS daily labels are NOT verified against IST observation windows, so whether label D-1 ends before the overpass is unverified.
+
+Tables: `*_daily_series.csv`, `*_max_k_day.csv`, `*_antecedent_before_s1.csv`. Figures: daily-map montage, native event total.
