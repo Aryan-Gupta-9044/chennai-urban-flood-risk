@@ -2,7 +2,7 @@
 """Module C2 (V2.3) - SOURCE-AGNOSTIC rainfall workflow for an event window, from daily rasters you place in data/external/rainfall/<source_id>/.
 No downloads and no source-specific logic: pick a source first, copy config/rainfall_source_template.json to <dir>/source.json and fill it in.
 Produces (native grid, never silently resampled): per-day completeness + AOI statistics time series, daily-map montage, strict event total
-(NaN if any day is missing), valid-day count, k-day maxima statistics, antecedent totals before each Sentinel-1 candidate date, report.
+(NaN if any day is missing), valid-day count, k-day maxima statistics, antecedent totals before event-configured Sentinel-1 dates, report.
 Missing / invalid days are NEVER treated as 0 mm. Anomaly is NOT computed without a same-source multi-year baseline.
 Usage:  .\\.venv\\Scripts\\python scripts\\rainfall_workflow.py --source-id <id> [--event 2015_nov_dec] [--allow-partial] [--resample-to-master]"""
 import argparse
@@ -35,6 +35,57 @@ def write_native(path, arr, transform, crs, desc):
 def block(a, b, status_, msg, t0, **kw):
     a.error(msg); status.record("C2", b, msg, seconds=time.time() - t0, **kw)
 
+
+
+def load_s1_observations(event_config, config_dir=None):
+    """Load Sentinel-1 dates from the source explicitly declared by a rainfall event.
+
+    Candidate roles retain their configured categories. Preprocessing dates are
+    observations only and receive category="unassigned".
+    """
+    config_dir = Path(config_dir) if config_dir is not None else paths.CONFIG
+    source = event_config.get("sentinel1_dates_from")
+    if not source:
+        raise ValueError("rainfall event has no sentinel1_dates_from configuration")
+
+    source_name = Path(source).name
+    if source_name == "s1_candidate_roles.json":
+        payload = json.loads((config_dir / source_name).read_text(encoding="utf-8"))
+        candidates = payload.get("candidates")
+        if not isinstance(candidates, list) or not candidates:
+            raise ValueError(f"{source_name} has no candidate list")
+        observations = [
+            {"date": item["date"], "category": item["category"], "kind": "candidate"}
+            for item in candidates
+        ]
+    elif source_name == "s1_preprocess.json":
+        payload = json.loads((config_dir / source_name).read_text(encoding="utf-8"))
+        dates = payload.get("dates")
+        if not isinstance(dates, list) or not dates:
+            raise ValueError(f"{source_name} has no processed dates")
+        observations = [
+            {"date": value, "category": "unassigned", "kind": "processed-observation"}
+            for value in dates
+        ]
+    else:
+        raise ValueError(f"unsupported Sentinel-1 date source in rainfall event: {source}")
+
+    seen = set()
+    for item in observations:
+        value = item.get("date")
+        try:
+            parsed = date.fromisoformat(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"invalid Sentinel-1 date in {source_name}: {item!r}") from exc
+        if parsed.isoformat() != value:
+            raise ValueError(f"Sentinel-1 dates must use YYYY-MM-DD in {source_name}: {item!r}")
+        if value in seen:
+            raise ValueError(f"duplicate Sentinel-1 date in {source_name}: {value}")
+        seen.add(value)
+
+    label = ("Sentinel-1 candidate date" if source_name == "s1_candidate_roles.json"
+             else "Sentinel-1 processed-observation date")
+    return observations, label, source_name
 
 def main():
     ap = argparse.ArgumentParser()
@@ -127,7 +178,7 @@ def main():
     ev_days = R.daterange(e0, e1)
     miss_ev = [d for d in ev_days if day_map.get(d) is None]
     total, nvalid = R.strict_total([day_map.get(d) for d in ev_days], allow_partial=False)
-    files, outd = [f"outputs/tables/{base}_daily_series.csv"], Path(a.out_dir) / a.source_id
+    files, outd = [str(tab / f"{base}_daily_series.csv")], Path(a.out_dir) / a.source_id
     total_state = "COMPUTED (all event-window days valid)"
     if miss_ev:
         total_state = f"NOT COMPUTED: {len(miss_ev)} of {len(ev_days)} event-window days missing/unusable ({', '.join(d.isoformat() for d in miss_ev[:6])}{' ...' if len(miss_ev) > 6 else ''})"
@@ -151,18 +202,28 @@ def main():
                     "aoi_mean_of_max_mm": None if s is None else round(s["mean_mm"], 2), "cell_max_mm": None if s is None else round(s["max_mm"], 2)})
     pd.DataFrame(kdf).to_csv(tab / f"{base}_max_k_day.csv", index=False)
 
-    roles = json.loads((paths.CONFIG / "s1_candidate_roles.json").read_text(encoding="utf-8"))["candidates"]
+    try:
+        s1_observations, s1_plot_label, s1_source_name = load_s1_observations(ev)
+    except (OSError, json.JSONDecodeError, ValueError, KeyError) as exc:
+        return block(log, status.BLOCKED, None, f"invalid Sentinel-1 date configuration for event '{a.event}': {exc}", t0)
+    outside_context = [
+        item["date"] for item in s1_observations
+        if not ctx[0] <= date.fromisoformat(item["date"]) <= ctx[-1]
+    ]
+    if outside_context:
+        return block(log, status.BLOCKED, None,
+                     f"Sentinel-1 dates fall outside event context window {ctx[0]}..{ctx[-1]}: {outside_context}", t0)
     ante = []
-    for c in roles:
-        d0 = date.fromisoformat(c["date"])
-        row = {"s1_date": c["date"], "category": c["category"]}
+    for observation in s1_observations:
+        d0 = date.fromisoformat(observation["date"])
+        row = {"s1_date": observation["date"], "category": observation["category"]}
         for n in ev["antecedent_windows_days"]:
             t, miss = R.window_total(day_map, d0, n, include_end_day=False)
             row[f"prior_{n}d_aoi_mean_mm"] = None if t is None else round(R.weighted_stats(t, w)["mean_mm"], 2)
             row[f"prior_{n}d_missing_days"] = len(miss)
         ante.append(row)
     pd.DataFrame(ante).to_csv(tab / f"{base}_antecedent_before_s1.csv", index=False)
-    files += [f"outputs/tables/{base}_max_k_day.csv", f"outputs/tables/{base}_antecedent_before_s1.csv"]
+    files += [str(tab / f"{base}_max_k_day.csv"), str(tab / f"{base}_antecedent_before_s1.csv")]
 
     import matplotlib
     matplotlib.use("Agg")
@@ -185,18 +246,18 @@ def main():
         gpd.GeoSeries([aoi]).boundary.plot(ax=ax, color="k", linewidth=0.6)
         ax.set_xlim(ext[0], ext[1]); ax.set_ylim(ext[2], ext[3]); ax.set_title(d.strftime("%d %b %Y"), fontsize=7)
     fig.suptitle(f"{src['source_id']} daily rainfall (mm/day), NATIVE {src['native_resolution']} cells, common scale 0-{vmax:.0f} mm. Day definition: {src['day_definition']}", fontsize=8)
-    fig.tight_layout(); fig.savefig(figd / f"{base}_daily_maps.png", dpi=170); plt.close(fig); files.append(f"outputs/figures/{base}_daily_maps.png")
+    fig.tight_layout(); fig.savefig(figd / f"{base}_daily_maps.png", dpi=170); plt.close(fig); files.append(str(figd / f"{base}_daily_maps.png"))
     if not miss_ev:
         fig, ax = plt.subplots(figsize=(5, 6))
         im = ax.imshow(np.ma.masked_invalid(total), extent=ext, cmap="Blues", interpolation="nearest"); fig.colorbar(im, ax=ax, label="mm")
         gpd.GeoSeries([aoi]).boundary.plot(ax=ax, color="k", linewidth=0.8)
         ax.set_title(f"{src['source_id']} event total {e0}..{e1}\nnative {src['native_resolution']} cells (no resampling)", fontsize=9)
         ax.set_xlim(ext[0], ext[1]); ax.set_ylim(ext[2], ext[3]); fig.tight_layout(); fig.savefig(figd / f"{base}_event_total_native.png", dpi=170); plt.close(fig)
-        files.append(f"outputs/figures/{base}_event_total_native.png")
+        files.append(str(figd / f"{base}_event_total_native.png"))
 
 
     # time-series plot (gaps and unusable days are marked, never drawn as zero) + map of the wettest usable day
-    s1_dates = [date.fromisoformat(c["date"]) for c in roles]
+    s1_dates = [date.fromisoformat(item["date"]) for item in s1_observations]
     fig, ax = plt.subplots(figsize=(11, 4))
     okd = [d for d in ctx if day_map.get(d) is not None]
     vals = [R.weighted_stats(day_map[d], w)["mean_mm"] for d in okd]
@@ -206,11 +267,11 @@ def main():
         ax.plot(bad, [0] * len(bad), "rx", markersize=5, label="missing/unusable day (NOT zero)")
     for k, dd in enumerate(s1_dates):
         if ctx[0] <= dd <= ctx[-1]:
-            ax.axvline(dd, color="k", ls="--", lw=0.7, label="Sentinel-1 candidate date" if k == 0 else None)
+            ax.axvline(dd, color="k", ls="--", lw=0.7, label=s1_plot_label if k == 0 else None)
     ax.axvspan(e0, e1, color="orange", alpha=0.12, label="event window (PROVISIONAL)")
     ax.set_ylabel("mm per labelled day"); ax.set_title(f"{src['source_id']} daily rainfall, study-area mean - day definition: {str(src['day_definition'])[:70]}...", fontsize=8)
     ax.legend(fontsize=7); fig.autofmt_xdate(); fig.tight_layout(); fig.savefig(figd / f"{base}_timeseries.png", dpi=170); plt.close(fig)
-    files.append(f"outputs/figures/{base}_timeseries.png")
+    files.append(str(figd / f"{base}_timeseries.png"))
     if okd:
         pk = okd[int(np.nanargmax(vals))]
         fig, ax = plt.subplots(figsize=(5, 6))
@@ -218,7 +279,7 @@ def main():
         gpd.GeoSeries([aoi]).boundary.plot(ax=ax, color="k", linewidth=0.8)
         ax.set_title(f"{src['source_id']}: wettest usable day {pk} (AOI mean {max(vals):.1f} mm)\nnative {src['native_resolution']} cells", fontsize=9)
         ax.set_xlim(ext[0], ext[1]); ax.set_ylim(ext[2], ext[3]); fig.tight_layout(); fig.savefig(figd / f"{base}_wettest_day_native.png", dpi=170); plt.close(fig)
-        files.append(f"outputs/figures/{base}_wettest_day_native.png")
+        files.append(str(figd / f"{base}_wettest_day_native.png"))
 
     res_note = "not requested"
     if a.resample_to_master and not miss_ev:
@@ -246,13 +307,16 @@ def main():
          (f"- Event total AOI-weighted mean {ev_stat['mean_mm']:.1f} mm; min/max cell {ev_stat['min_mm']:.1f}/{ev_stat['max_mm']:.1f} mm." if ev_stat else "- No event-total statistics (incomplete window)."),
          f"- Resampling to the master grid: {res_note}.",
          "- Anomaly / comparison: **NOT COMPUTED** - requires a same-source, same-grid multi-year same-calendar-window record (>= 10 years) that has not been supplied.",
-         "- Antecedent totals: prior-N-day window = the N labelled days D-N..D-1 for Sentinel-1 date D (the label D itself is EXCLUDED); a window with any missing/unusable day is NOT computed (empty, never a partial sum, never zero-filled). Sentinel-1 acquisition ~00:31 UTC / ~06:01 IST. WARNING: " + ("the CHIRPS daily labels are NOT verified against IST observation windows, so whether label D-1 ends before the overpass is unverified." if "chirps" in str(src["source_id"]).lower() else "IMD daily totals are nominally 24 h ending 08:30 IST, but the label convention is unconfirmed, so the overpass-relative timing of label D-1 is unverified."), "",
+         "- Sentinel-1 date source: " + ("candidate dates/categories from config/s1_candidate_roles.json; categories remain candidate labels, not confirmed hydrological truth." if s1_source_name == "s1_candidate_roles.json" else "processed-observation dates from config/s1_preprocess.json; category is `unassigned` and no dry, flood, baseline or recovery role is inferred."),
+         "- Antecedent totals: prior-N-day window = the N labelled days D-N..D-1 for each configured Sentinel-1 date D (the label D itself is EXCLUDED); a window with any missing/unusable day is NOT computed (empty, never a partial sum, never zero-filled). Sentinel-1 acquisition ~00:31 UTC / ~06:01 IST. WARNING: " + ("the CHIRPS daily labels are NOT verified against IST observation windows, so whether label D-1 ends before the overpass is unverified." if "chirps" in str(src["source_id"]).lower() else "IMD daily totals are nominally 24 h ending 08:30 IST, but the label convention is unconfirmed, so the overpass-relative timing of label D-1 is unverified."), "",
          "Tables: `*_daily_series.csv`, `*_max_k_day.csv`, `*_antecedent_before_s1.csv`. Figures: daily-map montage" + (", native event total." if not miss_ev else ".")]
-    (repd / f"{base}_report.md").write_text("\n".join(L), encoding="utf-8"); files.append(f"outputs/reports/{base}_report.md")
+    report_path = repd / f"{base}_report.md"
+    report_path.write_text("\\n".join(L), encoding="utf-8")
+    files.append(str(report_path))
     state = status.COMPLETED if (not miss_ev and not day_unconf and n_ok == len(ctx)) else status.PARTIAL
     status.record("C2", state, f"{a.source_id}/{a.event}: {n_ok}/{len(ctx)} days OK; event total {total_state.split(':')[0]}.", files=files,
                   extra={"source": a.source_id, "native_resolution": src["native_resolution"]}, seconds=time.time() - t0)
-    log.info("report: outputs/reports/%s_report.md", base)
+    log.info("report: %s", report_path)
 
 
 if __name__ == "__main__":

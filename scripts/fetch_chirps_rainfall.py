@@ -21,7 +21,7 @@ import numpy as np
 from src.utils import status, paths
 from src.utils.config import load_settings
 from src.utils.logging_setup import get_logger
-from src.geospatial import chirps, chirps_acquire as CA, rainfall as R
+from src.geospatial import chirps, chirps_acquire as CA, rainfall as R, chirps_runpaths as RP
 from src.geospatial.study_area import load_study_area
 
 BASE = paths.DATA_EXT / "rainfall" / CA.SOURCE_ID
@@ -83,9 +83,17 @@ def main():
     ap.add_argument("--min-coverage", type=float, default=0.95)
     ap.add_argument("--force", action="store_true", help="re-download even if a valid file exists (old one is kept in raw/failed only if invalid)")
     ap.add_argument("--limit", type=int, default=0, help="only the first N dates of the window (smoke test)")
-    ap.add_argument("--probe-json", default=str(paths.OUT_REP / "chirps_v3_sat_probe.json"))
+    ap.add_argument("--probe-json", default=None, help="probe result JSON; default: <outputs-dir>/reports/chirps_v3_sat_probe.json")
+    ap.add_argument("--base-dir", default=None, help="root of THIS run's CHIRPS data (raw/, manifest, source_metadata.json). Default: data/external/rainfall/chirps_v3_daily (the 2015 run)")
+    ap.add_argument("--outputs-dir", default=None, help="root of THIS run's reports/ and tables/. Default: the project outputs/ (the 2015 run)")
+    ap.add_argument("--status-id", default=None, help="status registry id (default CH3A = the 2015 entry; a non-2015 event must pass its own, e.g. CH3A_2021)")
     a = ap.parse_args()
-    t0 = time.time(); paths.ensure_dirs(); RAW.mkdir(parents=True, exist_ok=True); log = get_logger("chirps_fetch")
+    t0 = time.time(); log = get_logger("chirps_fetch")
+    try: rp = RP.resolve_run_paths("acquire", a.event, a.base_dir, a.outputs_dir, a.status_id)
+    except RP.PathIsolationError as e: print("BLOCKED (path isolation):", e); return 2
+    SID = rp["status_id"]; BASE_ = rp["base"]; RAW_ = BASE_ / "raw"; MANIFEST_ = RAW_ / "download_manifest.json"; OT, OR = rp["tables"], rp["reports"]
+    for d_ in (RAW_, OT, OR): d_.mkdir(parents=True, exist_ok=True)
+    probe_json = a.probe_json or str(OR / "chirps_v3_sat_probe.json")
     ev = json.loads((paths.CONFIG / "rainfall_events.json").read_text(encoding="utf-8"))["events"][a.event]
     start, end = a.start or ev["context_window"][0], a.end or ev["context_window"][1]
     expected = R.daterange(start, end)
@@ -93,7 +101,7 @@ def main():
     try:
         g, _, _ = load_study_area()
     except FileNotFoundError as e:
-        status.record("CH3A", status.BLOCKED, str(e)); print("BLOCKED:", e); return 2
+        status.record(SID, status.BLOCKED, str(e)); print("BLOCKED:", e); return 2
     aoi_wgs = g.geometry.union_all() if hasattr(g.geometry, "union_all") else g.geometry.unary_union
     try:
         import ee
@@ -105,22 +113,22 @@ def main():
         times = win.aggregate_array("system:time_start").getInfo()
         first = ee.Image(win.sort("system:time_start").first()); pj = first.select(chirps.BAND).projection(); proj = pj.getInfo()
     except Exception as e:                                   # noqa: BLE001
-        msg = f"{type(e).__name__}: {e}"; status.record("CH3A", status.BLOCKED, msg[:300] + " | " + AUTH_HELP); print("BLOCKED (Earth Engine metadata):", msg, "\n", AUTH_HELP); return 2
+        msg = f"{type(e).__name__}: {e}"; status.record(SID, status.BLOCKED, msg[:300] + " | " + AUTH_HELP); print("BLOCKED (Earth Engine metadata):", msg, "\n", AUTH_HELP); return 2
     from datetime import datetime, timezone
     found = [datetime.fromtimestamp(t / 1000, tz=timezone.utc).date() for t in times]
     cont = chirps.continuity(found, expected)
     if cont["missing"] or cont["duplicated"] or cont["unexpected"] or n != len(expected):
         msg = f"collection dates do not match the window: images={n} missing={cont['missing'][:5]} dup={cont['duplicated'][:5]} unexpected={cont['unexpected'][:5]}"
-        status.record("CH3A", status.BLOCKED, msg); print("BLOCKED:", msg); return 2
+        status.record(SID, status.BLOCKED, msg); print("BLOCKED:", msg); return 2
     crs, tr = chirps.grid_from_ee_projection(proj)
     import geopandas as gpd
     aoi = gpd.GeoSeries([aoi_wgs], crs=4326).to_crs(crs).iloc[0]
     wcells = chirps.snap_window(tr, aoi.bounds, pad_cells=1); wtr = chirps.window_transform(tr, wcells); shape = (wcells[3], wcells[2])
     weights, touch = chirps.aoi_cell_weights(wtr, shape, aoi); ncell = int(touch.sum())
-    problems = gate_on_probe(a.probe_json, crs, tr, ncell, start, end)
+    problems = gate_on_probe(probe_json, crs, tr, ncell, start, end)
     if abs(weights.sum() - 1.0) > 1e-6: problems.append("AOI is not fully inside the export window")
     if problems:
-        status.record("CH3A", status.BLOCKED, "probe gate failed: " + "; ".join(problems)[:400]); print("BLOCKED - probe gate failed:"); [print(" -", x) for x in problems]; return 2
+        status.record(SID, status.BLOCKED, "probe gate failed: " + "; ".join(problems)[:400]); print("BLOCKED - probe gate failed:"); [print(" -", x) for x in problems]; return 2
     print(f"[gate] probe passed on this grid. window {start}..{end} = {len(expected)} dates (downloading {len(dates)}); native {crs} pixel {tr.a} deg; export window {shape[0]}x{shape[1]} cells; AOI cells {ncell}")
 
     rows, cols = np.where(touch)
@@ -164,14 +172,14 @@ def main():
               "units": "mm/d (per Earth Engine catalog; not independently checkable)", "references": chirps.REFERENCES,
               "retrieval_started_utc": CA.utcnow(), "band_convention": "band1 precipitation (masked -> -9999), band2 valid 0/1; genuine zero rainfall kept as 0",
               "independence_note": chirps.INDEPENDENCE_NOTE, "validation_status": "NOT VALIDATED"}
-    m = CA.acquire(dates, RAW, export_fn, validator, MANIFEST, header=header, retries=a.retries, backoff=a.backoff, force=a.force, log=print, min_coverage=a.min_coverage)
+    m = CA.acquire(dates, RAW_, export_fn, validator, MANIFEST_, header=header, retries=a.retries, backoff=a.backoff, force=a.force, log=print, min_coverage=a.min_coverage)
     summ = CA.summarize(m, expected, a.min_coverage)             # judged over the WHOLE window, even when --limit restricted this run
 
     # ---- outputs: checksums, per-date integrity table, provenance, report
     sums = [f"{e['sha256']}  {e['file']}" for k, e in sorted(m["entries"].items()) if e.get("status") in ("OK", "LOW_COVERAGE")]       # checksums for every RETAINED valid file
-    (RAW / "SHA256SUMS.txt").write_text("\n".join(sums) + "\n", encoding="utf-8")
-    (BASE / "source_metadata.json").write_text(json.dumps({k: v for k, v in m.items() if k != "entries"}, indent=1, default=str), encoding="utf-8")
-    tab = paths.OUT_TAB / "chirps_v3_sat_acquisition.csv"
+    (RAW_ / "SHA256SUMS.txt").write_text("\n".join(sums) + "\n", encoding="utf-8")
+    (BASE_ / "source_metadata.json").write_text(json.dumps({k: v for k, v in m.items() if k != "entries"}, indent=1, default=str), encoding="utf-8")
+    tab = OT / "chirps_v3_sat_acquisition.csv"
     with open(tab, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f); w.writerow(["date", "status", "attempts", "file", "bytes", "sha256", "http_status", "aoi_cells", "cells_valid", "cells_missing", "aoi_area_coverage", "zero_cells_valid", "sentinel_cells", "valid_min_mm", "valid_max_mm", "note"])
         for d in expected:
@@ -191,12 +199,12 @@ def main():
           f"- Grid: {crs}, native pixel {tr.a} deg (nominal 0.05; Earth Engine reports 0.0500000007), export window {shape[0]}x{shape[1]} native cells (a clipped window of the native grid, NOT a resample); AOI-intersecting cells {ncell}.",
           f"- Every accepted file passed: 2 bands, native CRS/pixel size/lattice alignment/window origin/shape, valid band 0/1, masked cells = -9999 only, no NaN, no negative rainfall, and a server cell-centre sample agreeing with the file.",
           f"- AOI-area coverage over accepted dates: min {min(okcov):.1%}, max {max(okcov):.1%}." if okcov else "- No accepted dates.",
-          f"- Checksums: `data/external/rainfall/{CA.SOURCE_ID}/raw/SHA256SUMS.txt` and `download_manifest.json` (per-date attempts, HTTP status, sha256, request fields, validation). Per-date table: `outputs/tables/chirps_v3_sat_acquisition.csv`.", "",
+          f"- Checksums: `{RAW_ / 'SHA256SUMS.txt'}` and `download_manifest.json` (per-date attempts, HTTP status, sha256, request fields, validation). Per-date table: `{tab}`.", "",
           "## Limitations (unchanged by acquisition)", f"- Day definition: {chirps.DAY_DEFINITION}", f"- Licence: {chirps.LICENCE_NOTE}", f"- {chirps.INDEPENDENCE_NOTE}",
           f"- Native 0.05 deg (about 5.5 km): the AOI spans {ncell} cells; this adds no finer spatial information. No resampling was done.", "- Not validated; not a flood-prediction result. Event window remains PROVISIONAL.", ""]
-    rep = paths.OUT_REP / "chirps_v3_sat_acquisition.md"; rep.write_text("\n".join(L), encoding="utf-8")
+    rep = OR / "chirps_v3_sat_acquisition.md"; rep.write_text("\n".join(L), encoding="utf-8")
     state = status.COMPLETED if full else status.PARTIAL
-    status.record("CH3A", state, f"{summ['ok']}/{len(expected)} dates accepted; missing/failed {len(summ['failed_or_missing'])}; LOW_COVERAGE {len(summ['low_coverage'])}; day definition provisional", files=[rep, tab, MANIFEST], seconds=time.time() - t0)
+    status.record(SID, state, f"{summ['ok']}/{len(expected)} dates accepted; missing/failed {len(summ['failed_or_missing'])}; LOW_COVERAGE {len(summ['low_coverage'])}; day definition provisional", files=[rep, tab, MANIFEST_], seconds=time.time() - t0)
     print(f"\n=== ACQUISITION {'COMPLETE' if full else 'INCOMPLETE'}: {summ['ok']}/{len(expected)} dates accepted ===")
     if summ["low_coverage"]: print(f"LOW_COVERAGE (retained, not accepted; AOI-area coverage < {a.min_coverage:.0%}):", summ["low_coverage"])
     if summ["failed_or_missing"]: print("MISSING/FAILED:", summ["failed_or_missing"], "\nRe-run the same command to resume (verified files are kept).")

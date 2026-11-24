@@ -13,6 +13,44 @@
       "antecedent_windows_days": [1, 3, 7, 14, 30],
       "max_k_day": [1, 3, 5],
       "status": "PROPOSED - not confirmed"
+    },
+    "2021_sep_nov": {
+        "name": "Chennai 2021 Sep-Nov rainfall context for the eight processed Sentinel-1 dates",
+        "context_window": [
+            "2021-08-06",
+            "2021-11-28"
+        ],
+        "context_window_reason": "inclusive dates (115 days); 6 Aug is 30 days before the first Sentinel-1 date 2021-09-05 (30-day antecedent window = 6 Aug..4 Sep, reference day excluded); ends on the last Sentinel-1 date 2021-11-28",
+        "probe_test_dates": [
+            "2021-08-06",
+            "2021-09-05",
+            "2021-11-16",
+            "2021-11-28"
+        ],
+        "event_window_proposed": [
+            "2021-09-05",
+            "2021-11-28"
+        ],
+        "event_window_label": "PROVISIONAL",
+        "event_window_source": "span of the eight Sentinel-1 dates in config/s1_preprocess.json (a context span, NOT a verified flood-event window)",
+        "daily_map_window": [
+            "2021-09-05",
+            "2021-11-28"
+        ],
+        "sentinel1_dates_from": "config/s1_preprocess.json",
+        "antecedent_windows_days": [
+            1,
+            3,
+            7,
+            14,
+            30
+        ],
+        "max_k_day": [
+            1,
+            3,
+            5
+        ],
+        "status": "PROPOSED - not confirmed"
     }
   }
 }

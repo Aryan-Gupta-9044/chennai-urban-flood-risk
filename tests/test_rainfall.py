@@ -250,6 +250,38 @@ class TestWorkflow(unittest.TestCase):
             self.assertEqual(st["state"], "PARTIALLY COMPLETED")
 
 
+    def test_2021_sentinel1_dates_use_preprocessing_config_as_unassigned(self):
+        events = json.loads((ROOT / "config" / "rainfall_events.json").read_text(encoding="utf-8"))["events"]
+        observations, label, source = self.mod.load_s1_observations(events["2021_sep_nov"])
+        expected = json.loads((ROOT / "config" / "s1_preprocess.json").read_text(encoding="utf-8"))["dates"]
+        self.assertEqual(source, "s1_preprocess.json")
+        self.assertEqual(label, "Sentinel-1 processed-observation date")
+        self.assertEqual([item["date"] for item in observations], expected)
+        self.assertEqual(len(observations), 8)
+        self.assertTrue(all(item["category"] == "unassigned" for item in observations))
+        self.assertTrue(all(item["kind"] == "processed-observation" for item in observations))
+        self.assertFalse(any(item["date"].startswith("2015-") for item in observations))
+
+    def test_2015_sentinel1_candidate_roles_are_preserved(self):
+        events = json.loads((ROOT / "config" / "rainfall_events.json").read_text(encoding="utf-8"))["events"]
+        observations, label, source = self.mod.load_s1_observations(events["2015_nov_dec"])
+        configured = json.loads((ROOT / "config" / "s1_candidate_roles.json").read_text(encoding="utf-8"))["candidates"]
+        self.assertEqual(source, "s1_candidate_roles.json")
+        self.assertEqual(label, "Sentinel-1 candidate date")
+        self.assertEqual(
+            [(x["date"], x["category"]) for x in observations],
+            [(x["date"], x["category"]) for x in configured],
+        )
+        self.assertEqual(len(observations), 8)
+
+    def test_sentinel1_date_source_rejects_duplicates(self):
+        with tempfile.TemporaryDirectory() as d:
+            config_dir = Path(d)
+            (config_dir / "s1_preprocess.json").write_text(json.dumps({"dates": ["2021-09-05", "2021-09-05"]}))
+            with self.assertRaisesRegex(ValueError, "duplicate Sentinel-1 date"):
+                self.mod.load_s1_observations({"sentinel1_dates_from": "config/s1_preprocess.json"}, config_dir)
+
+
 class TestRegression(unittest.TestCase):
     def test_module_c_no_longer_zero_fills(self):
         txt = (ROOT / "scripts" / "process_rainfall.py").read_text()

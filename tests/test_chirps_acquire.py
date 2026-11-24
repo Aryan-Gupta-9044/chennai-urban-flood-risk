@@ -478,7 +478,7 @@ class TestPostAcquisitionAudit(unittest.TestCase):
 
     def test_status_not_partial_for_complete_acquisition_source(self):
         src = (ROOT / "scripts" / "fetch_chirps_rainfall.py").read_text(encoding="utf-8")
-        self.assertIn('status.record("CH3A", state,', src); self.assertNotIn('status.record("CH3A", status.PARTIAL', src)
+        self.assertIn('status.record(SID, state,', src); self.assertNotIn('status.record(SID, status.PARTIAL', src); self.assertNotIn('status.record("CH3A", status.PARTIAL', src)     # SID defaults to "CH3A" (2015); see test_chirps_2021_isolation
         old = (ROOT / "scripts" / "fetch_chirps_rainfall.py").read_text(encoding="utf-8")
         self.assertIn("day definition provisional", old)                                               # caveat remains in the message
 
