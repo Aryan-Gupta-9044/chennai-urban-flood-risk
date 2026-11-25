@@ -123,7 +123,19 @@ def weights_fingerprint(weights, ndigits=10):
     w = np.round(np.asarray(weights, dtype="float64"), ndigits) + 0.0; return hashlib.sha256(str(w.shape).encode() + w.tobytes()).hexdigest()[:16]
 
 
-def probe_cache_matches(cj, start, end, ncell, crs, n_expected, aoi_fp, weights_fp):
+def resolve_status_id(event, status_id, default, reserved=None):
+    """Status id for a script whose 2015 default is `default` (e.g. rainfall_workflow: "C2"). Defaults reproduce the 2015 behaviour exactly. For any event other than
+    DEFAULT_EVENT the id must be given explicitly and must not be `default` or any reserved 2015 id, otherwise PathIsolationError (nothing has been written yet)."""
+    sid = status_id or default
+    if event != DEFAULT_EVENT:
+        res = set(reserved or ()) | {default}
+        if sid in res:
+            raise PathIsolationError(f"event {event!r} must not use the 2015 status id {sid!r} ({sorted(res)} are reserved); pass a distinct --status-id (e.g. {default}_2021)")
+    return sid
+
+
+def probe_cache_matches(cj, start, end, ncell, crs, n_expected, aoi_fp, weights_fp, expected_dates=None):
     """probe_cache_reusable AND both fingerprints present in the cache and equal to the current ones. Caches written before the fingerprints existed are NOT reused."""
     if not probe_cache_reusable(cj, start, end, ncell, crs, n_expected): return False
+    if expected_dates is not None and set(cj.get("per_date", {})) != {str(d) for d in expected_dates}: return False      # exact date-key set, not just the count
     return bool(aoi_fp and weights_fp and cj.get("aoi_fingerprint") == aoi_fp and cj.get("weights_fingerprint") == weights_fp)

@@ -219,7 +219,7 @@ def main():
     if a.reuse_server_cache and not a.skip_all_dates and cache_path.exists():
         try:
             cj = json.loads(cache_path.read_text(encoding="utf-8"))
-            if RP.probe_cache_matches(cj, start, end, int(touch.sum()), crs, len(expected), AOI_FP, W_FP):
+            if RP.probe_cache_matches(cj, start, end, int(touch.sum()), crs, len(expected), AOI_FP, W_FP, expected_dates=[d.isoformat() for d in expected]):
                 per_date = cj["per_date"]; cache_note = f"REUSED from cache written {cj.get('computed_utc')} (not recomputed)"
                 print("[all-dates] re-using saved server results:", cache_note)
             else:
@@ -266,12 +266,12 @@ def main():
             date_rows.append({"date": d.isoformat(), "in_collection": d in set(dates), "aoi_cells": ncell, "cells_seen_by_server_geometry": None, "valid_cells": None, "missing_cells": None, "aoi_area_coverage": None, "mean_mm_valid_cells": None, "meets_threshold": False, "row_check": "NO SERVER ROW"})
             continue
         vc = int(pr["valid_cells"] or 0); cv = float(pr["cov"]) if pr["cov"] is not None else None
-        row_problems = chirps.server_row_problems(ncell, pr.get("cells_seen"), pr["valid_cells"] if pr["valid_cells"] is not None else 0, cv, weights[touch])
-        if pr.get("valid_cells_mask") is not None and int(round(pr["valid_cells_mask"])) != vc: row_problems.append(f"valid-cell counts disagree (value band {vc} vs mask band {pr['valid_cells_mask']})")
-        if row_problems: server_problems.append(f"{d.isoformat()}: " + "; ".join(row_problems))
+        rp = chirps.server_row_problems(ncell, pr.get("cells_seen"), pr["valid_cells"] if pr["valid_cells"] is not None else 0, cv, weights[touch])
+        if pr.get("valid_cells_mask") is not None and int(round(pr["valid_cells_mask"])) != vc: rp.append(f"valid-cell counts disagree (value band {vc} vs mask band {pr['valid_cells_mask']})")
+        if rp: server_problems.append(f"{d.isoformat()}: " + "; ".join(rp))
         if cv is not None: cov_by_date[d.isoformat()] = cv
         date_rows.append({"date": d.isoformat(), "in_collection": True, "aoi_cells": ncell, "cells_seen_by_server_geometry": pr.get("cells_seen"), "valid_cells": vc, "missing_cells": ncell - vc,
-                          "aoi_area_coverage": None if cv is None else round(cv, 4), "mean_mm_valid_cells": pr["mean_mm"], "meets_threshold": cv is not None and cv >= a.min_coverage, "row_check": "OK" if not row_problems else "; ".join(row_problems)})
+                          "aoi_area_coverage": None if cv is None else round(cv, 4), "mean_mm_valid_cells": pr["mean_mm"], "meets_threshold": cv is not None and cv >= a.min_coverage, "row_check": "OK" if not rp else "; ".join(rp)})
     comp = chirps.temporal_completeness(cov_by_date, [d.isoformat() for d in expected], a.min_coverage) if per_date else None
     # server vs local cross-check on test dates
     xchk = {d: (cov_by_date.get(d), test_cov[d]) for d in test_cov if d in cov_by_date}

@@ -2,6 +2,7 @@
 """Read-only SHA-256 preservation check of the 2015 CHIRPS v3 evidence (raw/daily rasters, probe files, manifests, source metadata, reports, tables, figure).
   --snapshot FILE : record the hashes of every existing 2015 file  (run BEFORE any 2021 command)
   --verify FILE   : recompute and compare with that snapshot; exit 1 if any file was modified or deleted (new files are only listed)
+An existing snapshot file is never replaced unless --overwrite is given.
 The snapshot file is written OUTSIDE the protected locations by default (the path you pass). Nothing is modified, moved or deleted."""
 import argparse
 import sys
@@ -12,10 +13,12 @@ from src.geospatial import chirps_runpaths as RP
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0]); g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--snapshot"); g.add_argument("--verify"); ap.add_argument("--root", default=None, help="project root (default: this repository)")
+    g.add_argument("--snapshot"); g.add_argument("--verify"); ap.add_argument("--overwrite", action="store_true", help="allow --snapshot to replace an EXISTING snapshot file (default: refuse)"); ap.add_argument("--root", default=None, help="project root (default: this repository)")
     a = ap.parse_args()
     if a.snapshot:
         out = Path(a.snapshot)
+        if out.exists() and not a.overwrite:
+            print(f"REFUSED: {out} already exists. A snapshot is the historical baseline and must not be replaced silently. Use a new file name, or pass --overwrite if you really mean to replace it."); return 2
         snap = RP.snapshot(a.root)
         RP.save_snapshot(out, snap); print(f"snapshot of {len(snap)} 2015 CHIRPS files written to {out}")
         if not snap: print("NOTE: no 2015 CHIRPS files were found under this root; nothing is protected here.")

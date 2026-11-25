@@ -33,6 +33,7 @@ MODULES = [
     ("CH3P_2021", "CHIRPS v3 DAILY_SAT 2021 context window: prepare workflow-ready daily rasters (V2.3, isolated)"),
     ("CMP", "CHIRPS vs IMD side-by-side comparison (V2.3, not validation)"),
     ("C2", "Rainfall event workflow (V2.3, source-agnostic, native grid)"),
+    ("C2_2021", "Rainfall event workflow, 2021 event (V2.3, isolated status id)"),
     ("D", "Land cover (ESA WorldCover)"),
     ("E", "Data integration and feature table"),
     ("F", "Flood inventory foundation"),

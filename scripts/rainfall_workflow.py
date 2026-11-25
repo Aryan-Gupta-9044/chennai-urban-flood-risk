@@ -17,10 +17,11 @@ import pandas as pd
 import rasterio
 from src.utils import status, paths
 from src.utils.logging_setup import get_logger
-from src.geospatial import rainfall as R
+from src.geospatial import rainfall as R, chirps_runpaths as RP
 from src.geospatial.raster_io import read_bounds
 
 ND = -9999.0
+STATUS_ID = "C2"          # 2015 default registry entry; main() replaces it from --status-id (required for any other event)
 REQUIRED = ["source_id", "unit", "day_definition", "file_pattern", "expected_crs", "native_resolution", "product_type", "version"]
 
 
@@ -33,7 +34,7 @@ def write_native(path, arr, transform, crs, desc):
 
 
 def block(a, b, status_, msg, t0, **kw):
-    a.error(msg); status.record("C2", b, msg, seconds=time.time() - t0, **kw)
+    a.error(msg); status.record(STATUS_ID, b, msg, seconds=time.time() - t0, **kw)
 
 
 
@@ -95,9 +96,13 @@ def main():
     ap.add_argument("--out-dir", default=str(paths.DATA_PROC / "rainfall"))
     ap.add_argument("--outputs-dir", default=str(paths.ROOT / "outputs"))
     ap.add_argument("--min-coverage", type=float, default=0.95)
+    ap.add_argument("--status-id", default=None, help="status registry id (default C2 = the 2015 entry; any other event must pass its own, e.g. C2_2021)")
     ap.add_argument("--allow-partial", action="store_true", help="also write a LOWER-BOUND event total when days are missing (clearly labelled)")
     ap.add_argument("--resample-to-master", action="store_true", help="also write a LABELLED nearest-neighbour resampling on the 30 m master grid")
     a = ap.parse_args()
+    global STATUS_ID
+    try: STATUS_ID = RP.resolve_status_id(a.event, a.status_id, "C2", RP.PROTECTED_STATUS_IDS)
+    except RP.PathIsolationError as e: print("BLOCKED (status id isolation):", e); return 2          # before any directory, file or status entry is touched
     t0 = time.time(); log = get_logger("C2_rainfall"); paths.ensure_dirs()
     odir = Path(a.outputs_dir); tab, figd, repd = odir / "tables", odir / "figures", odir / "reports"
     for d in (tab, figd, repd, Path(a.out_dir)):
@@ -314,10 +319,10 @@ def main():
     report_path.write_text("\\n".join(L), encoding="utf-8")
     files.append(str(report_path))
     state = status.COMPLETED if (not miss_ev and not day_unconf and n_ok == len(ctx)) else status.PARTIAL
-    status.record("C2", state, f"{a.source_id}/{a.event}: {n_ok}/{len(ctx)} days OK; event total {total_state.split(':')[0]}.", files=files,
+    status.record(STATUS_ID, state, f"{a.source_id}/{a.event}: {n_ok}/{len(ctx)} days OK; event total {total_state.split(':')[0]}.", files=files,
                   extra={"source": a.source_id, "native_resolution": src["native_resolution"]}, seconds=time.time() - t0)
     log.info("report: %s", report_path)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main() or 0)
