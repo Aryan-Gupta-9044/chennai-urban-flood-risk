@@ -1,0 +1,40 @@
+{
+  "verdict": "PROCEED-TO-REVIEW",
+  "reasons": [],
+  "min_coverage": 0.95,
+  "crs": "EPSG:4326",
+  "transform": [
+    0.05000000074505806,
+    0.0,
+    -180.0,
+    0.0,
+    -0.05000000074505806,
+    60.0
+  ],
+  "cells_touching_aoi": 29,
+  "test_coverage": {
+    "2015-07-21": 1.0,
+    "2015-11-15": 1.0,
+    "2015-12-01": 1.0,
+    "2015-12-20": 1.0
+  },
+  "test_dates_not_assessed": [],
+  "server_problems": [],
+  "temporal_completeness_verified": true,
+  "temporal_completeness": {
+    "dates_meeting": 153,
+    "dates_expected": 153,
+    "percent": 100.0,
+    "failing": []
+  },
+  "continuity": {
+    "missing": [],
+    "duplicated": [],
+    "unexpected": [],
+    "found": 153,
+    "expected": 153
+  },
+  "export_problems": [],
+  "output_errors": [],
+  "per_date_source": "computed this run"
+}

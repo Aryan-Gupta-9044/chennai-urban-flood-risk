@@ -1,0 +1,58 @@
+{
+  "_comment": "SUS-1 exploratory relative flood-SUSCEPTIBILITY configuration. Weights and normalisation choices are ASSUMPTIONS (equal weights by default, no fitting). Nothing is calibrated or validated; no flood labels are used. Not a flood prediction model and not a flood-risk assessment.",
+  "version": "SUS-1",
+  "output_dir": "outputs/susceptibility_v1",
+  "settings": "config/settings.json",
+  "aoi_geojsons": ["data/processed/study_area_utm44n.geojson", "data/processed/study_area_wgs84.geojson"],
+  "study_area_meta": "data/processed/study_area_meta.json",
+  "inputs": {
+    "dem_elevation_m": "data/processed/dem_elevation_utm44n_30m.tif",
+    "dem_conditioned_m": "data/processed/dem_conditioned_utm44n_30m.tif",
+    "slope_deg": "data/processed/slope_deg_utm44n_30m.tif",
+    "twi": "data/processed/twi_utm44n_30m.tif",
+    "flow_accumulation": "data/processed/flow_accumulation_utm44n_30m.tif",
+    "drainage_network": "data/processed/drainage_network_utm44n_30m.tif"
+  },
+  "context_inputs": {
+    "chirps_event_total_mm_native": "data/processed/rainfall_chirps_2021/chirps_2021/2021_sep_nov_event_total_mm_native.tif",
+    "s1wc1_n_dark_dates": "outputs/s1_water_candidates_review_v1/rasters/s1_water_candidates_n_dark_dates.tif",
+    "s1wc1_n_valid_dates": "outputs/s1_water_candidates_review_v1/rasters/s1_water_candidates_n_valid_dates.tif",
+    "s1wc1_persistent_dark_mask": "outputs/s1_water_candidates_review_v1/rasters/s1_water_candidates_persistent_dark_mask.tif",
+    "s1wc1_transient_candidate_date_count": "outputs/s1_water_candidates_review_v1/rasters/s1_water_candidates_transient_candidate_date_count.tif"
+  },
+  "antecedent_csv": "outputs/chirps_2021/tables/rainfall_chirps_2021_2021_sep_nov_antecedent_before_s1.csv",
+  "protected_output_prefixes": ["outputs/s1_water_candidates_review_v1", "outputs/s1_water_candidates_review_v2", "outputs/chirps_2021", "outputs/s1_persistence", "outputs/flood_reference", "outputs/reports", "data", "config", "src", "scripts", "tests", "docs"],
+  "params": {
+    "min_plateau_cells": 30,
+    "twi_min_slope_deg": 0.1,
+    "p_lo": 2.0,
+    "p_hi": 98.0,
+    "hotspot_quantile": 0.90,
+    "hotspot_min_cells": 25,
+    "n_random_weight_scenarios": 500,
+    "dirichlet_concentration": 5.0,
+    "random_seed": 20261210,
+    "corr_flag_abs_rho": 0.7
+  },
+  "indicators": {
+    "elevation_m":       {"source": "dem_elevation_m", "direction": "lower",  "transform": "none",  "method": "rank",          "weight": 1.0, "rationale": "lower ground collects water; relative to this AOI only"},
+    "slope_deg":         {"source": "slope_deg",       "direction": "lower",  "transform": "none",  "method": "rank",          "weight": 1.0, "rationale": "flatter ground drains slowly"},
+    "twi":               {"source": "twi",             "direction": "higher", "transform": "none",  "method": "rank",          "weight": 1.0, "rationale": "higher topographic wetness = more convergent/flatter; clamped where slope < 0.1 deg"},
+    "flow_accumulation": {"source": "flow_accumulation","direction": "higher","transform": "log10", "method": "robust_minmax", "weight": 1.0, "rationale": "larger upslope contributing area (conditioned-DEM D8)"},
+    "dist_to_drainage_m":{"source": "derived",         "direction": "lower",  "transform": "none",  "method": "robust_minmax", "weight": 1.0, "rationale": "closer to DEM-derived drainage; truncated at AOI edge"},
+    "hand_proxy_m":      {"source": "derived",         "direction": "lower",  "transform": "none",  "method": "robust_minmax", "weight": 1.0, "rationale": "height above the Euclidean-nearest drainage cell (NOT flow-path HAND)"},
+    "fill_depth_m":      {"source": "derived",         "direction": "higher", "transform": "none",  "method": "robust_minmax", "weight": 1.0, "rationale": "depression-filling depth (conditioned - raw DEM, max 1 m): local sinks"}
+  },
+  "scenarios": {
+    "explicit": {
+      "terrain_heavy":   {"elevation_m": 2, "slope_deg": 2, "hand_proxy_m": 2, "fill_depth_m": 2, "twi": 1, "flow_accumulation": 1, "dist_to_drainage_m": 1},
+      "hydrology_heavy": {"elevation_m": 1, "slope_deg": 1, "hand_proxy_m": 1, "fill_depth_m": 1, "twi": 2, "flow_accumulation": 2, "dist_to_drainage_m": 2}
+    },
+    "drop_one": true,
+    "normalisation_alternatives": {
+      "norm_all_rank": {"method": "rank"},
+      "norm_all_robust_minmax": {"method": "robust_minmax"}
+    }
+  },
+  "s1wc1_caveats": "S1WC-1 evidence is provisional: date-level radiometric offsets make candidate counts non-comparable across dates; ~half of S1WC-1 candidates sit on the DEM flattened-water signature. Context only; never a label, never validation."
+}

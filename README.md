@@ -1,111 +1,166 @@
-# Chennai Flood Risk - Version 2.2 (S1B: Nov 2015 SAR flood-extent PROXY, unvalidated)
+# Chennai Urban Flood-Risk Mapping and Prediction Framework
 
-Integrated Geospatial Framework for Urban Flood Risk Mapping and Prediction (Chennai, project B794).
-V2 = all V1 modules, unchanged in behaviour, + 4 small fixes + Sentinel-1 modules + V2 documentation (`docs\v2\`).
-Version 1 is NOT modified by this package: extract V2 into its own NEW folder.
+**Project:** Integrated Geospatial Framework for Urban Flood Risk Mapping and Prediction Using Multi-Source Data
+**Study area:** Chennai, Tamil Nadu, India
+**Project reference:** B794
+**Repository:** `chennai-urban-flood-risk`
 
-## V2.2: November 2015 flood-extent proxy (S1B)
-Earth Engine parts of this step are UNTESTED until you run them. The result is a SAR proxy, not verified flood extent; no accuracy is claimed.
-Run from the project folder (PowerShell). Prerequisites already done on your machine: V1 data, `s1_gee_check.py --event 2015_nov` table.
+## 1. Project overview
+
+This project develops a reproducible geospatial framework for investigating urban flood-related conditions in Chennai using multi-source Earth observation, terrain, rainfall, hydrological and supporting spatial data.
+
+The intended framework brings together:
+
+- Sentinel-1 SAR observations and water-related candidate analysis.
+- Terrain and hydrological indicators derived from elevation data.
+- Rainfall observations and antecedent rainfall analysis.
+- Flood-reference evidence and independent validation readiness.
+- Exposure and vulnerability assessment.
+- Integrated flood-risk assessment and, subject to sufficient evidence, prediction.
+
+The project is being developed incrementally. Implemented analytical modules must not be interpreted as a completed, independently validated flood-risk or prediction system.
+
+## 2. Current implementation status
+
+### Implemented technical foundations
+
+| Workstream | Current status |
+|---|---|
+| Sentinel-1 water-candidate analysis (S1WC) | Implemented; S1WC-2 technical integration accepted |
+| Sentinel-1 persistence and antecedent analysis | Implemented and tested |
+| Rainfall and CHIRPS workflows | Implemented with workflow isolation and date-source corrections |
+| IMD rainfall integration | Implemented provisionally; interpretation and validation limitations remain |
+| Hydrological terrain analysis | Implemented and tested |
+| Susceptibility mapping (SUS-1) | Baseline implemented and accepted with qualifications |
+| Susceptibility sensitivity review | Implemented; independent review findings documented |
+| Flood-reference integration checks | R0-R2 integration and automated checks implemented |
+| DEP-1 exposure and vulnerability | Requirements and architecture work in progress |
+| Independent flood-reference validation | Unresolved; evidence acquisition and qualification ongoing |
+| Integrated flood-risk assessment | Not yet validated |
+| Flood prediction | Not yet implemented as a validated predictive model |
+
+For the authoritative workstream status, decisions, evidence qualifications and next actions, consult `PROJECT_MASTER_CONTROL.md`.
+
+## 3. Scientific interpretation and limitations
+
+The project distinguishes between:
+
+- **Susceptibility:** relative spatial predisposition based on selected terrain and environmental indicators.
+- **Hazard:** the occurrence and characteristics of a potentially damaging flood event.
+- **Exposure:** people, buildings, infrastructure and assets located in potentially affected areas.
+- **Vulnerability:** the potential degree of harm to exposed people and assets.
+- **Risk:** the consequences arising from the interaction of hazard, exposure and vulnerability.
+- **Prediction:** estimation of future conditions using a separately specified and evaluated predictive approach.
+
+A susceptibility index is not a flood map, observed inundation extent, flood probability or validated risk estimate.
+
+Important current qualifications include:
+
+- Independent, georeferenced flood-reference data sufficient for quantitative validation have not yet been established.
+- Sentinel-1 water-related candidates are not automatically confirmed floodwater.
+- Terrain-derived drainage is not a verified stormwater infrastructure inventory.
+- The HAND implementation is a proxy and must not be interpreted as fully validated flow-path HAND.
+- The elevation data and derived indicators have known limitations, including surface-model effects and possible artefacts.
+- CHIRPS has a coarse native spatial resolution relative to the study area and is used with appropriate spatial limitations.
+- Some indicators are correlated; equal weighting and index interpretation require explicit qualification.
+- The study-area boundary is provisional and must not be presented as an official administrative boundary without verification.
+- Excluded or NoData areas must not be interpreted as zero susceptibility or zero risk.
+
+No flood-classification accuracy, predictive accuracy or independent validation performance should be claimed without suitable reference data and a documented evaluation.
+
+## 4. Repository structure
+
+The principal project directories include:
+
+| Directory | Purpose |
+|---|---|
+| `src/` | Reusable analytical modules |
+| `scripts/` | Workflow entry points and processing utilities |
+| `config/` | Versioned workflow and parameter configurations |
+| `tests/` | Automated unit, integration and safeguard tests |
+| `docs/` | Methodology, technical reports and research documentation |
+| `data/` | Data organisation; raw and processed datasets are generally excluded from Git |
+| `outputs/` | Selected figures, tables and reports |
+| `dashboard/` | Project dashboard components |
+
+Generated datasets, local caches, credentials, temporary package assemblies and large source-data archives should not be committed indiscriminately.
+
+## 5. Environment and testing
+
+The project uses Python and a project-local virtual environment on the Windows development machine.
+
+Activate or invoke the project environment from the repository root.
+
+Run the automated test suite:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
 ```
-.\.venv\Scripts\python -m pytest -q tests
-.\.venv\Scripts\python scripts\s1b_flood_extent.py --event 2015_nov            # plan only (gate + tile plan), no EE work
-.\.venv\Scripts\python scripts\s1b_flood_extent.py --event 2015_nov --run      # live re-check, tiled download, processing, report
-```
-Alternative with Earth Engine export tasks: `... --event 2015_nov --mode drive`, then watch **code.earthengine.google.com -> Tasks tab**
-(or `.\.venv\Scripts\earthengine task list`), download the GeoTIFF from Drive folder `chennai_flood_s1b`, and run `... --event 2015_nov --from-tif <file>`.
-Outputs (`<id>` = run id printed by the script): `data\processed\s1b\2015_nov\<id>\` (flood_proxy_30m.tif, flood_proxy_10m.tif, composites and diagnostic layers, flood_proxy_30m.geojson, metadata.json),
-`outputs\maps\s1b_2015_nov_<id>_*.png`, `outputs\reports\s1b_2015_nov_<id>_report.html`, `outputs\tables\s1b_2015_nov_<id>_stats.json`.
-Parameter test: `--set diff_threshold_db=-2.5` (new run id; earlier runs are kept).
 
-## V2.3: hydrological terrain analysis (module HYD)
-Terrain-derived flow direction, accumulation and drainage from the existing 30 m DEM. UNVERIFIED: not stormwater infrastructure, not validated. Tested on SYNTHETIC rasters only until you run it on the real DEM.
-```
-.\.venv\Scripts\python -m pytest -q tests
-.\.venv\Scripts\python scripts\process_hydrology.py
-```
-Options: `--threshold-km2 0.1` or `--threshold-cells N` (drainage threshold), `--max-fill-depth-m 1.0` (depressions deeper than this are kept as sinks), `--dem`, `--slope`, `--out-dir`, `--outputs-dir`, `--no-twi`.
-Outputs: `data\processed\dem_conditioned_utm44n_30m.tif`, `flow_direction_d8_utm44n_30m.tif`, `flow_accumulation_utm44n_30m.tif`, `drainage_network_utm44n_30m.tif` (+ `.gpkg`), `twi_utm44n_30m.tif` (only if justified);
-`outputs\figures\flow_accumulation_map.png`, `drainage_network_map.png`, `dem_conditioning_difference.png`, `twi_map.png`; `outputs\tables\hydrology_statistics.csv` (+ negative clusters, depression and threshold sensitivity); `outputs\reports\hydrology_methodology.md`.
-The original DEM is never modified.
+The latest local verification, with the temporary `shive_upload_parts_20261126_093923` package assembly excluded from test discovery, produced:
 
-## What is tested and what is not (read this first)
-- Tested (Linux build sandbox): 13 unit/import tests; offline pipeline behaviour (failed downloads reported as BLOCKED); V1 modules on a simulated fixture; V1 itself has since been run successfully by you on Windows 11.
-- ASF search: ran successfully on your Windows machine (V2.0). The V2.1 orbit changes were tested only with unit tests and a stubbed (simulated) ASF response in the build sandbox, not against live ASF.
-- **NOT tested live: everything that uses Google Earth Engine** (including `s1_gee_check.py`). Report any error text.
-- `run.ps1` additions for V2: none (same script as V1).
+- **488 passed**
+- **1 skipped**
+- **0 failed**
 
-## Immediate goal: Sentinel-1 availability check (Windows 11, PowerShell)
-1. Extract `chennai-flood-risk-v2.zip` to a NEW folder, e.g. `C:\Users\aryan\Downloads\chennai-flood-risk-v2`.
-2. Open PowerShell in the folder that contains `run.ps1` (File Explorer -> address bar -> type `powershell` -> Enter).
-3. Run ONE command (creates its own `.venv`, installs packages once, fetches the study-area boundary, then queries the ASF catalogue):
+The test run also reported dependency deprecation warnings and geographic-CRS area warnings. These are documented technical-review items; a passing test suite does not independently establish scientific validity.
 
-        powershell -NoProfile -ExecutionPolicy Bypass -File .\run.ps1 -Only "A1,S1A"
+The temporary package assembly is not part of the intended repository. In a clean checkout where it is absent, the ordinary test command above should be used.
 
-4. Read the result:
-   - `outputs\tables\s1_availability_summary.csv`  (verdict per event: PROCESSABLE / MARGINAL / NOT PROCESSABLE)
-   - `outputs\tables\s1_scenes_<event>.csv`  (every scene found: date, satellite, orbit, coverage %)
-   - `outputs\tables\s1_pairing.json`  (the chosen orbit and scenes)
-   - `outputs\reports\implementation_summary.html` and `logs\pipeline.log`
-5. Send me the summary CSV (and `logs\S1A_availability.log` if the module says BLOCKED).
+## 6. Reproducibility and data management
 
-Optional, to avoid re-downloading the boundary/ward data: copy `data\raw` from your V1 folder into this folder's `data\raw` before step 3.
-To re-run only the availability check later (after the boundary exists):
+The project uses configuration files, source-data manifests, checksums, processing reports and automated tests to support reproducibility.
 
-        .\.venv\Scripts\python scripts\s1_availability.py
+When reproducing a workflow:
 
-Run the tests:
+1. Use the documented project environment and configuration.
+2. Verify source-data provenance, dates, spatial reference systems and licensing.
+3. Preserve original inputs.
+4. Use distinct output locations for new runs.
+5. Retain run metadata, checksums and processing reports.
+6. Distinguish downloaded observations, derived products, proxies and reference evidence.
+7. Record blocked, incomplete or uncertain processing honestly.
 
-        .\.venv\Scripts\python -m unittest discover tests -v
+Raw data and large generated geospatial files are generally excluded from Git through `.gitignore`. Their acquisition and provenance should be documented separately.
 
-## V2.1: relative-orbit fix and Earth Engine scene check (no flood detection)
-What changed: ASF returned no relative orbit, so V2.0 grouped scenes under "orbit = None". V2.1 reads the relative orbit from the catalogue
-when present and otherwise DERIVES it from the absolute orbit with ESA's formula (S1A: (abs-73) mod 175 + 1; S1B: (abs-27) mod 175 + 1);
-scenes with unknown orbit are never paired; pairing needs the same direction AND relative orbit. The raw ASF response is now saved in
-`data\raw\s1_catalog\` and `outputs\tables\s1_asf_field_diagnostics.json` shows which orbit fields ASF filled. Your earlier V2.0 result files
-are copied once to `outputs\tables\archive_before_orbit_fix\` (copy your old `outputs\tables` into the new folder first if you extracted V2.1 elsewhere).
-Note: for your five Nov 2015 scenes the ESA formula gives relative orbit **92**, not 164 (164 is simply absolute orbit mod 175 without the
-mission offset). Earth Engine's own `relativeOrbitNumber_start` is the tie-breaker; the check below reports it.
+## 7. Documentation and project control
 
-1. Re-run the availability check (needs internet; boundary must exist, otherwise use the `-Only "A1,S1A"` command above):
+Start with these documents:
 
-        .\.venv\Scripts\python scripts\s1_availability.py
+- `PROJECT_MASTER_CONTROL.md` — current project baseline, ownership, verified findings, decisions, limitations and action register.
+- `docs/susceptibility_framework.md` — SUS-1 methodology and interpretation.
+- `docs/susceptibility_review_report.md` — independent technical review of susceptibility sensitivity and ranking.
+- `docs/s1_water_candidates_review.md` — Sentinel-1 water-candidate review.
+- `docs/s1_water_candidates_v2.md` — updated water-candidate methodology and documentation.
+- `PATCH_NOTES.md` — recent rainfall workflow correction notes.
 
-2. One-time Earth Engine sign-in (PowerShell, in the project folder):
+Other reports and supporting records are maintained under `docs/` and selected `outputs/` subdirectories.
 
-        .\.venv\Scripts\earthengine authenticate
+## 8. Development roadmap
 
-   Then put your Earth-Engine-registered Google Cloud project id in `config\settings.json`:  `"gee": {"project": "YOUR-PROJECT-ID"}`
-3. Scene-by-scene check in Earth Engine (queries COPERNICUS/S1_GRD; no flood detection):
+The remaining development is organised around:
 
-        .\.venv\Scripts\python scripts\s1_gee_check.py --event 2015_nov
+1. Finalising and approving DEP-1 exposure and vulnerability requirements.
+2. Implementing and testing exposure modules with verified data and provenance.
+3. Qualifying independent flood-reference observations and spatial evidence.
+4. Evaluating whether the available reference data support quantitative validation.
+5. Developing a defensible integrated risk framework only when its component evidence and assumptions are sufficiently established.
+6. Investigating predictive modelling only after suitable temporal data, target definitions, independent evaluation and leakage safeguards are available.
+7. Improving the dashboard, reporting, reproducibility and publication documentation.
 
-   Results: `outputs\reports\s1_gee_availability_2015_nov.md` and `outputs\tables\s1_gee_availability_2015_nov.csv`.
-   If Earth Engine is not signed in, the report says NOT QUERIED and prints the exact commands.
+Implementation status and priorities are maintained in `PROJECT_MASTER_CONTROL.md`; this roadmap does not imply that the remaining stages are complete.
 
-## Later (NOT needed for the availability check)
-Flood extent for one event, only after an event is PROCESSABLE and Earth Engine is set up:
+## 9. Research and publication integrity
 
-        .\.venv\Scripts\earthengine authenticate
-        (put your Cloud project id in config\settings.json -> "gee": {"project": "..."})
-        .\.venv\Scripts\python scripts\s1_flood_extent.py --event 2021_nov
+The project prioritises reproducibility, transparent assumptions, traceable data provenance and scientifically defensible interpretation.
 
-Outputs are SAR proxy labels, **unvalidated**; no accuracy is claimed. Compare with an independent reference using
-`scripts\compare_reference.py`. Details: `docs\v2\V2_PLAN.md`.
+All reported results should identify:
 
-## V1 behaviour (unchanged)
-`.\run.ps1` with no `-Only` runs every module (boundary, wards, DEM, rainfall, land cover, features, flood inventory, S1A, S1B,
-Random Forest, dashboard check, report). Module states: COMPLETED / PARTIALLY COMPLETED / BLOCKED / NOT STARTED.
-S1B and Random Forest report BLOCKED until labels exist - by design. Dashboard: `.\.venv\Scripts\streamlit run dashboard\app.py`.
-Manual drop-in folders: `data\external\{boundary,wards,dem,landcover,sentinel1,flood_labels}`.
+- Data source and observation period.
+- Spatial and temporal resolution.
+- Processing and classification assumptions.
+- Reference-data status.
+- Known limitations and uncertainty.
+- Whether a result is observed, derived, proxy-based, proposed or independently validated.
 
-## Documentation (`docs\v2\`)
-V2_PLAN.md | CHANGELOG_V2.md | DATASET_SOURCE_REGISTER.md | IMPLEMENTATION_STATUS.md | RESEARCH_DECISIONS.md | KNOWN_ISSUES_V2.md
-
-## IMD 2015 rainfall demo (V2.3-dev, PROVISIONAL, not validated) — Windows PowerShell
-```
-python scripts/fetch_imd_rainfall.py --year 2015 --format grd        # or download NetCDF in a browser, then: --register <file>
-python scripts/prepare_imd_rainfall.py --year 2015
-python scripts/rainfall_workflow.py --source-id imd_gridded_daily --event 2015_nov_dec   # add --min-coverage 0.6 if coastal cells are undefined
-```
-Send back `outputs/reports/imd_inspection_2015.md` and the workflow report.
+The framework is intended to become a demonstrable geospatial research product. Publication suitability will depend on the quality of the completed methodology, independent evidence, validation and reproducibility—not simply on the number of implemented modules.
