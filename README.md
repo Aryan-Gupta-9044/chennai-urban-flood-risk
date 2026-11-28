@@ -160,10 +160,6 @@ Before committing or publishing:
 
 ## Team responsibilities
 
-- **SHIVE:** implementation, code, tests, packaging and reproducible execution.
-- **Agent 1:** independent research, source/reference verification, provenance/licensing review and methodological assessment.
-- **Project owner:** decisions, acceptance, priorities and release approval.
-
 ## Status language
 
 Use `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `READY FOR REVIEW`, `ACCEPTED`, `ACCEPTED WITH QUALIFICATIONS`, `REJECTED`, `SUPERSEDED`, and `UNVERIFIED` precisely. A reported completion is not accepted until its evidence is reviewed.
