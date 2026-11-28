@@ -1,0 +1,32 @@
+{
+  "_comment": "DEP-2 run configuration. Paths are relative to the repository root unless absolute. The run writes ONLY inside output_dir; protected_outputs are checked before anything is written.",
+  "version": "DEP2-0.1",
+  "output_dir": "outputs/dep2_reference_exposure_vulnerability_2026",
+  "raw_dir": "data/external/dep2_sources",
+  "sources_manifest": "config/dep2_sources.json",
+  "evidence_register": "config/evidence_register.json",
+  "event_chronology": "config/event_chronology.json",
+  "s1_components_csv": "outputs/s1_2021_persistence_v1_2/tables/s1_2021_persistence_components.csv",
+  "s1_component_sets": ["2021-11-04", "2021-11-16", "2021-11-28", "persistent"],
+  "checker": {
+    "repo_root": ".",
+    "aoi_mode": "project",
+    "_aoi_mode_note": "'project' = use data/processed/study_area_*.geojson of the repository (the provisional OSM AOI). 'substitute_gcc_wards' = ONLY for a harness copy of the code when the project AOI is not available; never written into a real repository."
+  },
+  "comparison": {"null_draws": 200, "seed": 20261128, "report_buffer_m": [50, 100, 250], "component_thresholds_m": [0, 100, 250]},
+  "exposure": {"near_reported_radius_m": 250},
+  "vulnerability": {"dirichlet_draws": 1000, "top_k": 20},
+  "protected_outputs": [
+    "outputs/susceptibility_v1",
+    "outputs/susceptibility_review_v1",
+    "outputs/s1_2021_persistence_v1_2",
+    "outputs/s1_water_candidates_review_v1",
+    "outputs/s1_water_candidates_review_v2",
+    "outputs/chirps_2021",
+    "outputs/tables",
+    "outputs/reports",
+    "outputs/figures",
+    "outputs/maps",
+    "shive_upload_parts_20261126_093923"
+  ]
+}

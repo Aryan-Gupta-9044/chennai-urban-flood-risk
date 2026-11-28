@@ -60,3 +60,16 @@ outputs/*
 # Local IDE files
 .vscode/
 .idea/
+
+# Local integration backups and temporary package assemblies
+FINAL*_PRE_INTEGRATION_BACKUP_*/
+shive_upload_parts_*/
+
+# Local acquisition caches
+outputs/tables/s1_inventory_cache/
+
+# Local ML reproducibility rerun (retain locally)
+outputs/ml_review_v1_1_rerun/
+
+# Local pre-release documentation backup
+FINAL*_PRE_DOCS_BACKUP_*/
