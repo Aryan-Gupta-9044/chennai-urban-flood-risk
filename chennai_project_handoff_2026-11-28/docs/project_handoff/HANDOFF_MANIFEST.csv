@@ -1,0 +1,19 @@
+Deliverable,Suggested location,Priority,Status at 2026-11-28,Owner,Notes
+Baseline integrity report,docs/research/BASELINE_INTEGRITY_REPORT.md,High,Pending fresh audit,Pro agent,Verify current checkout before changes
+Paper and reference audit,paper/review/PAPER_AND_REFERENCE_AUDIT.md,High,Pending,Agent 1 + Pro,Verify every reference and claim
+Claim evidence register,paper/review/CLAIM_EVIDENCE_REGISTER.csv,High,Pending,Agent 1,Exact paper wording mapped to evidence
+Reference verification,paper/review/REFERENCE_VERIFICATION.csv,High,Pending,Agent 1,DOI/title/authors/year/venue
+Source reconciliation,docs/research/SOURCE_RECONCILIATION.csv,High,Partial / reconcile,Pro,Acquired vs copied vs used vs validation
+Evidence status register,docs/research/EVIDENCE_STATUS_REGISTER.csv,High,Pending consolidation,Agent 1 + Pro,Do not upgrade statuses without evidence
+DEP2-SUS1 scientific audit,docs/research/DEP2_SUS1_SCIENTIFIC_AUDIT.md,High,Pending,Pro + Agent 1,"Grid, CRS, temporal support, correlation"
+Integration decision log,docs/research/INTEGRATION_DECISION_LOG.md,High,Pending,Pro + Agent 1,Do not assume a numerical risk score
+Validation gap analysis,docs/research/VALIDATION_GAP_ANALYSIS.md,High,Pending,Agent 1 + Pro,Identify independent observations
+Independent comparison protocol,docs/research/INDEPENDENT_COMPARISON_PROTOCOL.md,High,Pending,Agent 1 + Pro,Define valid metrics and independence
+Validation data inventory,docs/research/VALIDATION_DATA_INVENTORY.csv,High,Pending,Pro,"Provenance, date, resolution, license"
+Validation results,docs/research/VALIDATION_RESULTS.md,High,Not established,Pro,Only valid comparisons; report limitations
+ML statistical audit,docs/research/ML_STATISTICAL_AUDIT.md,High,Pending independent audit,Agent 1 + Pro,"AUC, nulls, correction, leakage"
+ML decision register,docs/research/ML_DECISION_REGISTER.csv,High,Pending,Agent 1 + Pro,Document interpretation choices
+Supervisor review package,paper/review/SUPERVISOR_REVIEW_PACKAGE.md,Later,Pending,Pro,Do not send without approval
+IEEE venue comparison,paper/review/IEEE_VENUE_COMPARISON.md,Later,Pending,Pro,Use official venue pages
+Paper v3,paper/main_v3.tex and PDF,Later,Not started,Pro + Agent 1,Only after evidence audit
+Final research handoff,docs/research/FINAL_RESEARCH_HANDOFF.md,Later,Pending,Pro,Include blockers and evidence
