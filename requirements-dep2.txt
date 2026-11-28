@@ -1,0 +1,2 @@
+# DEP-2 additional dependency (all others are in requirements.txt; scipy comes with scikit-learn)
+pdfplumber>=0.11,<0.12

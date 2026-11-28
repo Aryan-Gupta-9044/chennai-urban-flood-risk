@@ -19,7 +19,7 @@ import numpy as np
 import rasterio
 from src.utils import status, paths
 from src.utils.logging_setup import get_logger
-from src.geospatial import chirps, chirps_acquire as CA, rainfall as R
+from src.geospatial import chirps, chirps_acquire as CA, rainfall as R, chirps_runpaths as RP
 
 NODATA = -9999.0
 
@@ -70,12 +70,15 @@ def convert_one(raw, out, d, meta, low_coverage=False):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--event", default="2015_nov_dec")
-    ap.add_argument("--base-dir", default=str(paths.DATA_EXT / "rainfall" / CA.SOURCE_ID))
-    ap.add_argument("--outputs-dir", default=str(paths.ROOT / "outputs"))
+    ap.add_argument("--base-dir", default=None, help="CHIRPS data root of THIS run. Default: data/external/rainfall/chirps_v3_daily (the 2015 run)")
+    ap.add_argument("--outputs-dir", default=None, help="outputs root of THIS run. Default: the project outputs/ (the 2015 run)")
+    ap.add_argument("--status-id", default=None, help="status registry id (default CH3P = the 2015 entry; a non-2015 event must pass its own, e.g. CH3P_2021)")
     ap.add_argument("--include-low-coverage", action="store_true", help="ALSO convert dates acquired as LOW_COVERAGE (labelled in the file tags and the table); default: not converted")
     a = ap.parse_args()
     t0 = time.time(); log = get_logger("chirps_prepare")
-    base = Path(a.base_dir); raw = base / "raw"; daily = base / "daily"; od = Path(a.outputs_dir)
+    try: rp = RP.resolve_run_paths("prepare", a.event, a.base_dir, a.outputs_dir, a.status_id)
+    except RP.PathIsolationError as e: print("BLOCKED (path isolation):", e); return 2
+    SID = rp["status_id"]; base = rp["base"]; raw = base / "raw"; daily = base / "daily"; od = rp["outputs"]
     for p in (od / "tables", od / "reports"): p.mkdir(parents=True, exist_ok=True)
     daily.mkdir(parents=True, exist_ok=True)
     for stale in daily.glob("*.part"): stale.unlink()        # leftovers of an interrupted conversion are never results
@@ -83,7 +86,7 @@ def main():
     expected = R.daterange(*ev["context_window"])
     m = CA.load_manifest(raw / "download_manifest.json")
     if m is None:
-        status.record("CH3P", status.BLOCKED, f"no readable manifest at {raw / 'download_manifest.json'}; run scripts/fetch_chirps_rainfall.py first"); print("BLOCKED: no manifest"); return 2
+        status.record(SID, status.BLOCKED, f"no readable manifest at {raw / 'download_manifest.json'}; run scripts/fetch_chirps_rainfall.py first"); print("BLOCKED: no manifest"); return 2
     rows = []
     for d in expected:
         e = m["entries"].get(d.isoformat()); row = {"date": d.isoformat(), "status": "MISSING", "note": ""}
@@ -113,7 +116,7 @@ def main():
         w = csv.DictWriter(fh, fieldnames=cols, extrasaction="ignore"); w.writeheader(); w.writerows(rows)
     nconv = sum(r["status"].startswith("CONVERTED") for r in rows); nlow = sum(r["status"] == "CONVERTED_LOW_COVERAGE" for r in rows)
     meta = {k: v for k, v in m.items() if k != "entries"}
-    src = {"source_id": CA.SOURCE_ID, "name": "CHIRPS v3 DAILY_SAT (UCSB-CHC/CHIRPS/V3/DAILY_SAT) via Google Earth Engine, native-grid window",
+    src = {"source_id": CA.SOURCE_ID if a.event == RP.DEFAULT_EVENT else base.name, "name": "CHIRPS v3 DAILY_SAT (UCSB-CHC/CHIRPS/V3/DAILY_SAT) via Google Earth Engine, native-grid window",
            "version": "CHIRPS v3.0 DAILY_SAT; manifest sha256 " + CA.sha256_file(raw / "download_manifest.json")[:12],
            "product_type": "satellite-blended (IMERG Late V07 disaggregation of station-adjusted pentads); not independent of gauges", "unit": "mm", "accumulation_hours": None,
            "low_coverage_dates_included": nlow, "day_definition": chirps.DAY_DEFINITION, "file_pattern": "daily/{date:%Y%m%d}.tif", "expected_crs": meta.get("crs", "EPSG:4326"), "nodata": NODATA,
@@ -126,10 +129,10 @@ def main():
     L = ["# CHIRPS v3 DAILY_SAT - preparation for rainfall_workflow", "", f"- Converted {nconv} of {len(expected)} dates ({expected[0]}..{expected[-1]}); of these {nlow} are LOW_COVERAGE dates converted only because --include-low-coverage was set. Raw files untouched in `raw/`.",
          "- Daily files keep the raw CRS and transform exactly (native 0.05 deg window; no resample, no reproject). Masked cells = -9999; genuine 0 mm = 0.",
          f"- Not converted ({len(bad)}): " + (", ".join(f"{r['date']} [{r['status']}]" for r in bad[:15]) + (" ..." if len(bad) > 15 else "") if bad else "none"),
-         f"- Day definition: {chirps.DAY_DEFINITION}", f"- {chirps.INDEPENDENCE_NOTE}", "", f"Next: `python scripts/rainfall_workflow.py --source-id {CA.SOURCE_ID} --event {a.event}`", ""]
+         f"- Day definition: {chirps.DAY_DEFINITION}", f"- {chirps.INDEPENDENCE_NOTE}", "", f"Next: `python scripts/rainfall_workflow.py --source-id {CA.SOURCE_ID if a.event == RP.DEFAULT_EVENT else base.name} --event {a.event}`", ""]
     rep = od / "reports" / "chirps_v3_sat_preparation.md"; rep.write_text("\n".join(L), encoding="utf-8")
     state = status.BLOCKED if not nconv else (status.COMPLETED if (nconv == len(expected) and nlow == 0) else status.PARTIAL)   # data completeness only; the provisional day definition is a caveat in the message/report, not a data gap
-    status.record("CH3P", state, f"{nconv}/{len(expected)} dates converted; day definition provisional" + (f"; {len(bad)} missing" if bad else ""), files=[rep, tab], seconds=time.time() - t0)
+    status.record(SID, state, f"{nconv}/{len(expected)} dates converted; day definition provisional" + (f"; {len(bad)} missing" if bad else ""), files=[rep, tab], seconds=time.time() - t0)
     print(f"converted {nconv}/{len(expected)}; source.json written; report {rep}")
     return 0 if (nconv == len(expected) and nlow == 0) else 1
 

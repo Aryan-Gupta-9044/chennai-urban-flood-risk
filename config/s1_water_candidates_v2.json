@@ -1,0 +1,23 @@
+{
+  "_comment": "S1WC-2: additive refinement of S1WC-1 (S1WC-1 config is not modified; its params are reused verbatim). Adds ONE class: dark candidate on a provisional DEM-indicated flattened-water signature. No new thresholds, no normalisation, no terrain flattening, no flood labels. Not a confirmed water mask; the Copernicus Water Body Mask is NOT used.",
+  "version": "S1WC-2",
+  "base_config": "config/s1_water_candidates.json",
+  "s1wc1_output_dir": "outputs/s1_water_candidates_review_v1",
+  "v2_params": {"min_plateau_cells": 30, "twi_clamp_deg": 0.1, "block_cells": 30, "block_min_cells": 300},
+  "plateau_rule": "non-zero DEM values: 4-neighbour component of exactly equal float values on the 30 m master grid with >= min_plateau_cells cells (a priori value 30 = Stage A raw-mosaic rule; other sizes are reported as sensitivity only). DEM == 0 exactly is flagged regardless of component size. slope == 0 alone is NOT used.",
+  "reference_layers": {
+    "dem_elevation_m": "data/processed/dem_elevation_utm44n_30m.tif",
+    "slope_deg": "data/processed/slope_deg_utm44n_30m.tif",
+    "twi": "data/processed/twi_utm44n_30m.tif",
+    "flow_accumulation": "data/processed/flow_accumulation_utm44n_30m.tif",
+    "drainage_network": "data/processed/drainage_network_utm44n_30m.tif"
+  },
+  "required_reference_layers": ["dem_elevation_m", "slope_deg"],
+  "caveats": [
+    "The DEM-indicated flattened-water signature is provisional: it is not a confirmed permanent-water mask, not a flood exclusion, and not the Copernicus Water Body Mask.",
+    "Copernicus GLO-30 flattens water bodies; a DEM value of 0 does not imply mean sea level (EGM2008 datum).",
+    "Plateau detection uses only cells inside the AOI (DEM is NoData outside); plateaus mostly outside the AOI may be missed.",
+    "TWI is a relative, unvalidated index; slopes below the clamp (0.1 deg) are clamped, so TWI on flat/flattened cells is dominated by the clamp.",
+    "Remaining class-1 candidates are NOT confirmed floodwater. Date-level radiometric offsets (see the comparability table) mean counts are not comparable across dates."
+  ]
+}

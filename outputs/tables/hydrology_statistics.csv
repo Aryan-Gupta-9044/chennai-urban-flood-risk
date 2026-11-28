@@ -1,0 +1,45 @@
+metric,value,unit,note
+input_dem,dem_elevation_utm44n_30m.tif,,read-only; sha256 1a92502ec57e616c...
+crs,EPSG:32644,,
+resolution,30.0,m,
+grid_size,726x1416,cells,
+valid_cells,483727,cells,
+elevation_min,-16.82,m,
+elevation_mean,10.05,m,
+elevation_median,10.097,m,
+elevation_max,53.765,m,
+negative_elevation_cells,154,cells,
+negative_elevation_pct,0.0318,%,
+negative_clusters,40,clusters,
+negative_largest_cluster,30,cells,
+negative_share_within_300m_of_nodata_edge,2.6,%,
+negative_share_in_closed_depressions,98.7,%,closed = fill depth > min-depth
+closed_depressions_total,12466,count,
+depressions_filled,8889,count,max depth <= 1.0 m
+depressions_kept_unfilled,3577,count,treated as internal sinks
+conditioning_cells_raised_gt_tol,31682,,
+conditioning_area_km2_raised,28.5138,,
+conditioning_max_raise_m,0.999655,,
+conditioning_mean_raise_over_changed_m,0.286359,,
+conditioning_volume_added_m3,8173146.961972,,
+conditioning_cells_lowered,0,,
+conditioning_pct_valid_changed,6.549562,,
+conditioning_tolerance_m,0.01,,
+conditioning_max_fill_depth_param,1.0,m,
+conditioning_min_depth_param,0.01,m,
+conditioning_epsilon,1e-06,m/cell,
+flow_terminal_cells,19392,cells,no downslope neighbour
+flow_outlets_on_nodata_edge,1628,cells,
+flow_internal_sinks,17764,cells,kept depressions / unresolved
+accumulation_conserved,True,,sum of accumulation at terminal cells == valid cells
+accumulation_max,11680,cells,
+accumulation_max_area,10.512,km2,
+drainage_threshold_cells,112,cells,
+drainage_threshold_area,0.1008,km2,
+drainage_channel_cells,5394,cells,
+drainage_vector,"4990 segments, 176.9 km",,
+twi,generated (slope clamp 0.1 deg affects 2.61% of cells),,
+twi_min,4.175,,
+twi_mean,7.951,,
+twi_max,19.118,,
+clamped_pct,2.608,,

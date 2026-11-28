@@ -1,0 +1,18 @@
+{
+  "_comment": "Sentinel-1 per-date dark-backscatter (water/flood CANDIDATE) review product v1. Thresholds are STARTING values from common SAR open-water practice, NOT tuned or validated for Chennai. Output is not a flood extent and not validated.",
+  "version": "S1WC-1",
+  "input_dir": "data/processed/s1_2021",
+  "dates": ["2021-09-05", "2021-09-17", "2021-09-29", "2021-10-11", "2021-10-23", "2021-11-04", "2021-11-16", "2021-11-28"],
+  "nodata": -9999.0,
+  "params": {"vv_dark_db": -18.0, "vh_dark_db": -24.0, "persistent_min_dark_dates": 6, "min_valid_dates": 6, "max_slope_deg": 5.0, "min_cluster_cells": 4, "min_valid_fraction": 0.5},
+  "reference_layers": {
+    "slope_deg": "data/processed/slope_deg_utm44n_30m.tif",
+    "dem_elevation_m": "data/processed/dem_elevation_utm44n_30m.tif",
+    "twi": "data/processed/twi_utm44n_30m.tif",
+    "flow_accumulation": "data/processed/flow_accumulation_utm44n_30m.tif",
+    "drainage_network": "data/processed/drainage_network_utm44n_30m.tif"
+  },
+  "required_reference_layers": ["slope_deg"],
+  "rainfall_csv": "outputs/chirps_2021/tables/rainfall_chirps_2021_2021_sep_nov_antecedent_before_s1.csv",
+  "date_meaning": "date_utc is the Sentinel-1A acquisition date (descending relative orbit 92, overpass ~00:31 UTC, ~06:01 IST). It is the observation date of that single scene, NOT an event date and NOT the date a flood began or peaked."
+}

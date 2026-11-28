@@ -1,0 +1,104 @@
+{
+  "_comment": "SUS-1 methodology review (experimental, read-only on SUS-1). Alternatives are EXPLORATORY constructions compared with the accepted baseline; none is calibrated or validated, and none replaces SUS-1 unless the project explicitly adopts it.",
+  "version": "SUS-1-REVIEW-1",
+  "output_dir": "outputs/susceptibility_review_v1",
+  "sus1_dir": "outputs/susceptibility_v1",
+  "sus1_config": "config/susceptibility.json",
+  "settings": "config/settings.json",
+  "aoi_geojson": "data/processed/study_area_utm44n.geojson",
+  "raw_inputs": {
+    "dem_elevation_m": "data/processed/dem_elevation_utm44n_30m.tif",
+    "dem_conditioned_m": "data/processed/dem_conditioned_utm44n_30m.tif",
+    "slope_deg": "data/processed/slope_deg_utm44n_30m.tif",
+    "drainage_network": "data/processed/drainage_network_utm44n_30m.tif"
+  },
+  "schemes": {
+    "A_baseline_equal7": {
+      "kind": "equal",
+      "note": "accepted SUS-1 baseline: 7 indicators, weight 1/7 each"
+    },
+    "B_grouped": {
+      "kind": "grouped",
+      "note": "3 groups, equal group weights, equal within group",
+      "groups": {
+        "wetness_family": [
+          "slope_deg",
+          "twi",
+          "flow_accumulation"
+        ],
+        "low_ground_drainage_position": [
+          "elevation_m",
+          "hand_proxy_m",
+          "dist_to_drainage_m"
+        ],
+        "depression": [
+          "fill_depth_m"
+        ]
+      }
+    },
+    "B2_grouped_2groups": {
+      "kind": "grouped",
+      "note": "2 groups, equal group weights, equal within group: fill depth joins the low-ground group (it describes local low ground) so the 93%-zero, pit-scale fill indicator is not promoted to a stand-alone third of the index",
+      "groups": {
+        "wetness_family": [
+          "slope_deg",
+          "twi",
+          "flow_accumulation"
+        ],
+        "low_ground_drainage_position_depression": [
+          "elevation_m",
+          "hand_proxy_m",
+          "dist_to_drainage_m",
+          "fill_depth_m"
+        ]
+      }
+    },
+    "C_reduced_no_twi": {
+      "kind": "subset",
+      "note": "TWI removed (it is a function of slope and flow accumulation, which stay); 6 indicators equal weight",
+      "indicators": [
+        "elevation_m",
+        "slope_deg",
+        "flow_accumulation",
+        "dist_to_drainage_m",
+        "hand_proxy_m",
+        "fill_depth_m"
+      ]
+    }
+  },
+  "hotspot": {
+    "min_cells_sensitivity": [
+      25,
+      50,
+      100,
+      200,
+      400
+    ],
+    "merge_closing_iterations": [
+      1,
+      2
+    ],
+    "merged_min_cells": 25,
+    "top_k": 10,
+    "block_min_scored_fraction": 0.5,
+    "block_cells_sensitivity": [
+      5,
+      10,
+      20
+    ],
+    "block_cells_primary": 10,
+    "_comment": "quantile and base min cells come from the SUS-1 config so the review always matches the accepted baseline"
+  },
+  "protected_output_prefixes": [
+    "outputs/susceptibility_v1",
+    "outputs/s1_water_candidates_review_v1",
+    "outputs/chirps_2021",
+    "outputs/reports",
+    "data",
+    "config",
+    "src",
+    "scripts",
+    "tests",
+    "docs"
+  ]
+}

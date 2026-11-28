@@ -1,0 +1,2 @@
+pass,rel_orbit,platform,n_scenes,n_acquisition_dates,first_date,last_date,n_with_VV,n_with_VH,n_dual_pol,n_incomplete_aoi_coverage,min_coverage_pct,mean_coverage_pct,mean_valid_pct
+DESCENDING,92,SENTINEL-1A,16,8,2021-09-05,2021-11-28,16,16,16,16,20.74570540600697,50.05,49.99

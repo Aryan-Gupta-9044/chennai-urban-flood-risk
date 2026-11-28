@@ -1,0 +1,54 @@
+{
+ "outputs/susceptibility_v1": {
+  "files": 27,
+  "tree_sha256": "7d2230c6241f7d41cd93952e0eec0ef9d450540615094b718065bd5a3ab815b9"
+ },
+ "outputs/susceptibility_review_v1": {
+  "files": 45,
+  "tree_sha256": "076e05eda255a6c4a49899f575e3c0ce5f9e004d9240ebd373bd80ec22fbdf87"
+ },
+ "outputs/s1_water_candidates_review_v1": {
+  "files": 22,
+  "tree_sha256": "1fb556db9a0aa4871c129247ec82f7182e6e4b7b9073eb8441651d304bb07c73"
+ },
+ "outputs/s1_water_candidates_review_v2": {
+  "files": 24,
+  "tree_sha256": "ca1f879dde56001246fa15f0ffe041c352016cb7046c58e2c2fb0a5f0518b149"
+ },
+ "outputs/s1_2021_persistence_v1_2": {
+  "files": 27,
+  "tree_sha256": "08d55304d7e7648e62326f7141e21080fd9e6eea543b7b593c1a47e7d74dccbb"
+ },
+ "outputs/chirps_2021": {
+  "files": 22,
+  "tree_sha256": "464e88d1b537c7553bf8b076cab6b01be4962bffb4f24d6567177ff71b02cd6e"
+ },
+ "outputs/dep2_local_run_01": {
+  "files": 99,
+  "tree_sha256": "0731387449a3fe05dc7dc184f2e29b319a8dc63fe1bb4a6947c06b7a64585d8a"
+ },
+ "outputs/dep2_reference_exposure_vulnerability_2026": {
+  "files": 103,
+  "tree_sha256": "94001624d6cbebe822428850e18c2e1a942ba282eed7bdc251abace3ecb1f8b6"
+ },
+ "outputs/ml_exploratory_v1": {
+  "files": 24,
+  "tree_sha256": "90eff1a633378913d64374f25bc9349969ce351a8f261fd8b0471dc23b436e4d"
+ },
+ "outputs/ml_exploratory_v1_rerun": {
+  "files": 23,
+  "tree_sha256": "6c39edb9fbf50945b28297c54af88be227f9496816e5bada50dadb19aa4d88a5"
+ },
+ "outputs/tables/s1_inventory_cache": {
+  "files": 33,
+  "tree_sha256": "903a94539456173cf486a2d690c46a0ec08008faf30d9bdd2e793cd23697cda6"
+ },
+ "data": {
+  "files": 863,
+  "tree_sha256": "a2b9faf2628931aaa864d11fca9436e6d853eed53163015f620f11a07fa48e60"
+ },
+ "paper/main_v1_final01.tex": {
+  "files": 1,
+  "tree_sha256": "8be755d590c8e02175fce3a95111b373a46108d3048739466b8c116a9624df99"
+ }
+}

@@ -1,0 +1,5 @@
+date,aoi_area_coverage,cells_touching_aoi,cells_valid,cells_missing,aoi_inside_window,valid_cells_zero_mm,valid_min,valid_max,sentinel_cells,note
+2015-07-21,1.0,29,29,0,1.0000000000000002,34,0.0,5.036667346954346,3,server sample: 29 unmasked of 29 AOI cells; value mismatches=0; valid-in-tif-but-absent-server=0; unmasked-server-but-masked-in-tif=0
+2015-11-15,1.0,29,29,0,1.0000000000000002,0,84.31039428710938,150.69467163085938,3,server sample: 29 unmasked of 29 AOI cells; value mismatches=0; valid-in-tif-but-absent-server=0; unmasked-server-but-masked-in-tif=0
+2015-12-01,1.0,29,29,0,1.0000000000000002,0,165.70907592773438,240.01332092285156,3,server sample: 29 unmasked of 29 AOI cells; value mismatches=0; valid-in-tif-but-absent-server=0; unmasked-server-but-masked-in-tif=0
+2015-12-20,1.0,29,29,0,1.0000000000000002,8,0.0,0.5299787521362305,3,server sample: 29 unmasked of 29 AOI cells; value mismatches=0; valid-in-tif-but-absent-server=0; unmasked-server-but-masked-in-tif=0

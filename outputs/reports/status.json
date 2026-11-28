@@ -1,0 +1,401 @@
+{
+  "modules": {
+    "S1W": {
+      "id": "S1W",
+      "title": "Sentinel-1 window scan for better dates (V2.3)",
+      "state": "COMPLETED",
+      "message": "3 IW items in window; 3 compatible with ref geometry: ['2015-11-24', '2015-12-06', '2015-12-18']",
+      "files": [
+        "outputs/tables/s1_window_scan_2015-11-20_2015-12-21.csv",
+        "outputs/reports/s1_window_scan_2015-11-20_2015-12-21.md"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-22T12:16:10",
+      "seconds": 8.2
+    },
+    "A1": {
+      "id": "A1",
+      "title": "Chennai study-area boundary",
+      "state": "PARTIALLY COMPLETED",
+      "message": "PROVISIONAL boundary, 435 km2. PROVISIONAL: not verified against the official Greater Chennai Corporation administrative boundary. Do not treat as official.",
+      "files": [
+        "outputs/figures/study_area.png",
+        "outputs/maps/study_area.html",
+        "data/processed/study_area_wgs84.geojson",
+        "data/processed/study_area_utm44n.geojson"
+      ],
+      "datasets": [
+        {
+          "name": "Chennai study-area boundary",
+          "kind": "PROVISIONAL",
+          "source": "OpenStreetMap (Nominatim geocode via osmnx)",
+          "path": "data/processed/study_area_wgs84.geojson"
+        }
+      ],
+      "requirements": [
+        "Compare with the official GCC boundary; if different, place the official file in data/external/boundary/ and re-run."
+      ],
+      "extra": {
+        "kind": "PROVISIONAL",
+        "source": "OpenStreetMap (Nominatim geocode via osmnx)",
+        "verification": "PROVISIONAL: not verified against the official Greater Chennai Corporation administrative boundary. Do not treat as official.",
+        "area_km2": 435.33,
+        "native_crs_checked": "EPSG:4326 (all inputs reprojected)",
+        "analysis_crs": "EPSG:32644",
+        "bounds_wgs84": [
+          80.13392,
+          12.85198,
+          80.3329,
+          13.23516
+        ],
+        "area_sanity": "OK",
+        "note": ""
+      },
+      "updated": "2026-11-22T12:15:22",
+      "seconds": 9.1
+    },
+    "S1I": {
+      "id": "S1I",
+      "title": "Sentinel-1 acquisition inventory + baseline candidates (V2.3)",
+      "state": "COMPLETED",
+      "message": "16 IW items; 0 compatible; candidates: ",
+      "files": [
+        "outputs/tables/s1_inventory_2021_nov_2021-09-01_2021-12-01.csv",
+        "outputs/tables/s1_inventory_2021_nov_2021-09-01_2021-12-01_geometry_summary.csv",
+        "outputs/reports/s1_inventory_2021_nov_2021-09-01_2021-12-01.md"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-24T10:59:40",
+      "seconds": 20.4
+    },
+    "REF": {
+      "id": "REF",
+      "title": "Independent-reference readiness matrix (V2.3)",
+      "state": "PARTIALLY COMPLETED",
+      "message": "7 candidate references registered; 0 obtained.",
+      "files": [
+        "outputs/reports/reference_readiness.md"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-22T12:44:00"
+    },
+    "B": {
+      "id": "B",
+      "title": "DEM: elevation and slope",
+      "state": "COMPLETED",
+      "message": "Elevation -16.8..53.8 m on 30 m grid. Source: Copernicus GLO-30 DSM (AWS Open Data). Copernicus GLO-30 is a surface model (includes buildings/trees), so urban micro-relief is approximate.",
+      "files": [
+        "data/processed/dem_elevation_utm44n_30m.tif",
+        "data/processed/slope_deg_utm44n_30m.tif",
+        "outputs/figures/elevation_map.png",
+        "outputs/figures/slope_map.png",
+        "outputs/tables/dem_statistics.csv",
+        "data/raw/dem/copdem30_80.12_12.84_80.34_13.25.tif"
+      ],
+      "datasets": [
+        {
+          "name": "DEM",
+          "kind": "REAL",
+          "source": "Copernicus GLO-30 DSM (AWS Open Data)",
+          "path": "data/raw/dem/copdem30_80.12_12.84_80.34_13.25.tif"
+        }
+      ],
+      "requirements": [
+        "Flow accumulation / TWI need hydrological conditioning (planned next module)."
+      ],
+      "extra": {},
+      "updated": "2026-11-22T12:46:09",
+      "seconds": 17.7
+    },
+    "HYD": {
+      "id": "HYD",
+      "title": "Hydrological terrain analysis (V2.3, terrain-derived, unverified)",
+      "state": "COMPLETED",
+      "message": "Terrain-derived hydrology: 8889 depressions filled, 3577 kept, 5394 channel cells at 0.101 km2. Unverified. TWI generated (slope clamp 0.1 deg affects 2.61% of cells). Vector: 4990 segments, 176.9 km.",
+      "files": [
+        "data/processed/dem_conditioned_utm44n_30m.tif",
+        "data/processed/flow_direction_d8_utm44n_30m.tif",
+        "data/processed/flow_accumulation_utm44n_30m.tif",
+        "data/processed/drainage_network_utm44n_30m.tif",
+        "data/processed/twi_utm44n_30m.tif",
+        "data/processed/drainage_network_utm44n_30m.gpkg",
+        "outputs/reports/hydrology_methodology.md"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {
+        "threshold_cells": 112
+      },
+      "updated": "2026-11-22T13:05:37",
+      "seconds": 5.7
+    },
+    "IMD": {
+      "id": "IMD",
+      "title": "IMD 0.25 deg rainfall: acquisition + native conversion (V2.3 demo)",
+      "state": "PARTIALLY COMPLETED",
+      "message": "153 daily native GeoTIFFs written (2015-07-21..2015-12-20); day definition PROVISIONAL; run rainfall_workflow.py next.",
+      "files": [
+        "data/external/rainfall/imd_gridded_daily/daily",
+        "data/external/rainfall/imd_gridded_daily/source.json",
+        "outputs/reports/imd_inspection_2015.md"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-24T14:23:18",
+      "seconds": 2.7
+    },
+    "CH3": {
+      "id": "CH3",
+      "title": "CHIRPS v3 DAILY_SAT: coverage probe (V2.3)",
+      "state": "PARTIALLY COMPLETED",
+      "message": "probe verdict PROCEED-TO-REVIEW: coverage + mask checks passed; awaiting user review before bulk download",
+      "files": [
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\reports\\chirps_v3_sat_probe.md",
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\tables\\chirps_v3_sat_probe_dates.csv",
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\tables\\chirps_v3_sat_probe_aoi_cells.csv"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-22T23:13:06",
+      "seconds": 21.3
+    },
+    "CH3A": {
+      "id": "CH3A",
+      "title": "CHIRPS v3 DAILY_SAT: controlled acquisition of the 153-day window (V2.3)",
+      "state": "COMPLETED",
+      "message": "153/153 dates accepted; missing/failed 0; LOW_COVERAGE 0; day definition provisional",
+      "files": [
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\reports\\chirps_v3_sat_acquisition.md",
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\tables\\chirps_v3_sat_acquisition.csv",
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\data\\external\\rainfall\\chirps_v3_daily\\raw\\download_manifest.json"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-23T17:36:07",
+      "seconds": 846.9
+    },
+    "CH3P": {
+      "id": "CH3P",
+      "title": "CHIRPS v3 DAILY_SAT: prepare workflow-ready daily rasters (V2.3)",
+      "state": "PARTIALLY COMPLETED",
+      "message": "153/153 dates converted; day definition provisional",
+      "files": [
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\reports\\chirps_v3_sat_preparation.md",
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\tables\\chirps_v3_sat_conversion.csv"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-23T17:36:31",
+      "seconds": 3.1
+    },
+    "C2": {
+      "id": "C2",
+      "title": "Rainfall event workflow (V2.3, source-agnostic, native grid)",
+      "state": "PARTIALLY COMPLETED",
+      "message": "chirps_v3_daily/2015_nov_dec: 153/153 days OK; event total COMPUTED (all event-window days valid).",
+      "files": [
+        "outputs/tables/rainfall_chirps_v3_daily_2015_nov_dec_daily_series.csv",
+        "data/processed/rainfall/chirps_v3_daily/2015_nov_dec_event_total_mm_native.tif",
+        "outputs/tables/rainfall_chirps_v3_daily_2015_nov_dec_max_k_day.csv",
+        "outputs/tables/rainfall_chirps_v3_daily_2015_nov_dec_antecedent_before_s1.csv",
+        "outputs/figures/rainfall_chirps_v3_daily_2015_nov_dec_daily_maps.png",
+        "outputs/figures/rainfall_chirps_v3_daily_2015_nov_dec_event_total_native.png",
+        "outputs/figures/rainfall_chirps_v3_daily_2015_nov_dec_timeseries.png",
+        "outputs/figures/rainfall_chirps_v3_daily_2015_nov_dec_wettest_day_native.png",
+        "outputs/reports/rainfall_chirps_v3_daily_2015_nov_dec_report.md"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {
+        "source": "chirps_v3_daily",
+        "native_resolution": "0.05 deg (native; Earth Engine grid 0.0500000007 deg); the files are a clipped window of the native grid, not resampled"
+      },
+      "updated": "2026-11-24T14:18:55",
+      "seconds": 4.7
+    },
+    "CMP": {
+      "id": "CMP",
+      "title": "CHIRPS vs IMD side-by-side comparison (V2.3, not validation)",
+      "state": "PARTIALLY COMPLETED",
+      "message": "IMD valid cells 1/3; comparison is side-by-side only, not validation",
+      "files": [
+        "outputs\\cmp_chirps_imd_run_20261128_01\\reports\\chirps_vs_imd_comparison.md"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-28T00:33:26",
+      "seconds": 2.2
+    },
+    "S1DC": {
+      "id": "S1DC",
+      "title": "Sentinel-1 date-level multi-slice coverage verification (V2.3)",
+      "state": "COMPLETED",
+      "message": "8 groups; 8 verified complete; EE pixel check run; explicit dates missing: none",
+      "files": [
+        "outputs/tables/s1_2021_date_level_coverage.csv",
+        "outputs/tables/s1_2021_date_level_coverage_slices.csv",
+        "outputs/reports/s1_2021_date_level_coverage.md"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-24T11:13:15",
+      "seconds": 66.0
+    },
+    "S1PP": {
+      "id": "S1PP",
+      "title": "Sentinel-1 2021 date-level preprocessing (V2.3, M4C)",
+      "state": "COMPLETED",
+      "message": "overall M4C 8 of 8 configured dates QA_PASS (VV and VH): COMPLETE; this run requested 8 date(s); Earth Engine run: True",
+      "files": [
+        "outputs/tables/s1_2021_preprocessing_qa.csv",
+        "outputs/reports/s1_2021_preprocessing_report.md"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-24T14:07:53",
+      "seconds": 854.9
+    },
+    "S1PD": {
+      "id": "S1PD",
+      "title": "Sentinel-1 2021 product QA diagnostics (V2.3, M4C review)",
+      "state": "COMPLETED",
+      "message": "2021-11-28: 42996 VV cells > 5.0 dB in 8355 components; footprint/time/pixel overlap reconciled; rasters unchanged: True",
+      "files": [
+        "outputs/reports/s1_2021_2021-11-28_qa_diagnostics.md",
+        "outputs/tables/s1_2021_2021-11-28_VV_high_components.csv",
+        "outputs/tables/s1_2021_2021-11-28_exceedance.csv",
+        "outputs/tables/s1_2021_2021-11-28_VV_high_blocks.csv",
+        "outputs/tables/s1_2021_2021-11-28_overlap_reconciliation.csv",
+        "outputs/figures/s1_2021_2021-11-28_VV_high_map.png"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-24T14:11:40",
+      "seconds": 1.7
+    },
+    "CH3_2021": {
+      "id": "CH3_2021",
+      "title": "CHIRPS v3 DAILY_SAT 2021 context window: coverage probe (V2.3, isolated)",
+      "state": "PARTIALLY COMPLETED",
+      "message": "probe verdict PROCEED-TO-REVIEW: coverage + mask checks passed; awaiting user review before bulk download",
+      "files": [
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\chirps_2021\\reports\\chirps_v3_sat_probe.md",
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\chirps_2021\\tables\\chirps_v3_sat_probe_dates.csv",
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\chirps_2021\\tables\\chirps_v3_sat_probe_aoi_cells.csv"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-24T18:57:02",
+      "seconds": 22.8
+    },
+    "CH3A_2021": {
+      "id": "CH3A_2021",
+      "title": "CHIRPS v3 DAILY_SAT 2021 context window: controlled acquisition of the 115-day window (V2.3, isolated)",
+      "state": "COMPLETED",
+      "message": "115/115 dates accepted; missing/failed 0; LOW_COVERAGE 0; day definition provisional",
+      "files": [
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\chirps_2021\\reports\\chirps_v3_sat_acquisition.md",
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\chirps_2021\\tables\\chirps_v3_sat_acquisition.csv",
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\data\\external\\rainfall\\chirps_2021\\raw\\download_manifest.json"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-24T19:17:07",
+      "seconds": 853.7
+    },
+    "CH3P_2021": {
+      "id": "CH3P_2021",
+      "title": "CHIRPS v3 DAILY_SAT 2021 context window: prepare workflow-ready daily rasters (V2.3, isolated)",
+      "state": "COMPLETED",
+      "message": "115/115 dates converted; day definition provisional",
+      "files": [
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\chirps_2021\\reports\\chirps_v3_sat_preparation.md",
+        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\chirps_2021\\tables\\chirps_v3_sat_conversion.csv"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {},
+      "updated": "2026-11-24T19:18:23",
+      "seconds": 2.4
+    },
+    "E": {
+      "id": "E",
+      "title": "Data integration and feature table",
+      "state": "PARTIALLY COMPLETED",
+      "message": "Feature stack with 2 layers (elevation_m, slope_deg). Absent: landcover_class, builtup_fraction, rain_event_total_mm. Still missing for the full design: flow_accumulation, twi, distance_to_drainage, drainage_density, distance_to_roads, population, relief_shelters.",
+      "files": [
+        "data/processed/feature_stack_utm44n_30m.tif",
+        "outputs/tables/feature_table_sample.csv",
+        "outputs/reports/data_quality_report.json",
+        "outputs/reports/data_quality_report.md"
+      ],
+      "datasets": [
+        {
+          "name": "Feature stack",
+          "kind": "DERIVED",
+          "source": "Modules B, C, D",
+          "path": "data/processed/feature_stack_utm44n_30m.tif"
+        }
+      ],
+      "requirements": [
+        "flow_accumulation: needs hydrologically conditioned DEM (e.g. pysheds/WhiteboxTools) - planned next",
+        "twi: derived from flow accumulation + slope - planned next",
+        "distance_to_drainage: needs OSM waterways/drains via Overpass - planned next",
+        "drainage_density: needs OSM waterways - planned next",
+        "distance_to_roads: needs OSM roads - planned next",
+        "population: needs WorldPop/Census ward population - not yet acquired",
+        "relief_shelters: needs shelter locations (OSM / GCC list) - not yet acquired",
+        "flood_labels: needs Sentinel-1 flood extents (Module F, requires Google Earth Engine authentication)"
+      ],
+      "extra": {
+        "features": [
+          "elevation_m",
+          "slope_deg"
+        ]
+      },
+      "updated": "2026-11-28T00:34:53",
+      "seconds": 0.3
+    },
+    "C2_RUN_20261128_01": {
+      "id": "C2_RUN_20261128_01",
+      "title": "C2_RUN_20261128_01",
+      "state": "PARTIALLY COMPLETED",
+      "message": "chirps_v3_daily/2015_nov_dec: 153/153 days OK; event total COMPUTED (all event-window days valid).",
+      "files": [
+        "outputs\\chirps_v3_2015_run_20261128_01\\tables\\rainfall_chirps_v3_daily_2015_nov_dec_daily_series.csv",
+        "data/processed/rainfall_chirps_v3_2015_run_20261128_01/chirps_v3_daily/2015_nov_dec_event_total_mm_native.tif",
+        "outputs\\chirps_v3_2015_run_20261128_01\\tables\\rainfall_chirps_v3_daily_2015_nov_dec_max_k_day.csv",
+        "outputs\\chirps_v3_2015_run_20261128_01\\tables\\rainfall_chirps_v3_daily_2015_nov_dec_antecedent_before_s1.csv",
+        "outputs\\chirps_v3_2015_run_20261128_01\\figures\\rainfall_chirps_v3_daily_2015_nov_dec_daily_maps.png",
+        "outputs\\chirps_v3_2015_run_20261128_01\\figures\\rainfall_chirps_v3_daily_2015_nov_dec_event_total_native.png",
+        "outputs\\chirps_v3_2015_run_20261128_01\\figures\\rainfall_chirps_v3_daily_2015_nov_dec_timeseries.png",
+        "outputs\\chirps_v3_2015_run_20261128_01\\figures\\rainfall_chirps_v3_daily_2015_nov_dec_wettest_day_native.png",
+        "outputs\\chirps_v3_2015_run_20261128_01\\reports\\rainfall_chirps_v3_daily_2015_nov_dec_report.md"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {
+        "source": "chirps_v3_daily",
+        "native_resolution": "0.05 deg (native; Earth Engine grid 0.0500000007 deg); the files are a clipped window of the native grid, not resampled"
+      },
+      "updated": "2026-11-28T00:42:36",
+      "seconds": 3.9
+    }
+  }
+}

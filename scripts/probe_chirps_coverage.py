@@ -26,7 +26,7 @@ import numpy as np
 from src.utils import status, paths
 from src.utils.config import load_settings
 from src.utils.logging_setup import get_logger
-from src.geospatial import chirps, rainfall as R
+from src.geospatial import chirps, rainfall as R, chirps_runpaths as RP
 from src.geospatial.study_area import load_study_area
 
 BASE = paths.DATA_EXT / "rainfall" / "chirps_v3_daily"
@@ -72,22 +72,29 @@ def main():
     ap.add_argument("--project", default=None)
     ap.add_argument("--reuse-exports", action="store_true", help="re-use test GeoTIFFs already in probe/ (they are RE-VALIDATED in full; provenance recorded as reused) instead of downloading again")
     ap.add_argument("--reuse-server-cache", action="store_true", help="re-use the saved per-date server results (probe/server_per_date_cache.json) if its window/cell count match")
+    ap.add_argument("--base-dir", default=None, help="root of THIS run's CHIRPS data (probe/ goes under it). Default: data/external/rainfall/chirps_v3_daily (the 2015 run)")
+    ap.add_argument("--outputs-dir", default=None, help="root of THIS run's reports/, tables/, figures/. Default: the project outputs/ (the 2015 run)")
+    ap.add_argument("--status-id", default=None, help="status registry id for this run (default CH3 = the 2015 entry; a non-2015 event must pass its own, e.g. CH3_2021)")
     ap.add_argument("--skip-all-dates", action="store_true", help="skip the server-side per-date coverage over the whole window (test images only)")
     a = ap.parse_args()
-    t0 = time.time(); paths.ensure_dirs(); PROBE.mkdir(parents=True, exist_ok=True)
+    t0 = time.time()
+    try: rp = RP.resolve_run_paths("probe", a.event, a.base_dir, a.outputs_dir, a.status_id)
+    except RP.PathIsolationError as e: print("BLOCKED (path isolation):", e); return 2
+    SID = rp["status_id"]; probe = rp["base"] / "probe"; OT, OR, OF = rp["tables"], rp["reports"], rp["figures"]
+    for d_ in (probe, OT, OR, OF): d_.mkdir(parents=True, exist_ok=True)
     log = get_logger("chirps_probe")
     ev = json.loads((paths.CONFIG / "rainfall_events.json").read_text(encoding="utf-8"))["events"][a.event]
     start, end = a.start or ev["context_window"][0], a.end or ev["context_window"][1]
     expected = R.daterange(start, end)
-    tests = [date.fromisoformat(x) for x in a.test_dates.split(",") if x.strip()] or sorted({expected[0], date(2015, 11, 15), date(2015, 12, 1), expected[-1]} & set(expected))
+    tests = [date.fromisoformat(x) for x in a.test_dates.split(",") if x.strip()] or ([date.fromisoformat(x) for x in ev["probe_test_dates"]] if ev.get("probe_test_dates") else sorted({expected[0], date(2015, 11, 15), date(2015, 12, 1), expected[-1]} & set(expected)))
     bad = [d for d in tests if d not in set(expected)]
     if bad:
-        status.record("CH3", status.BLOCKED, f"test date(s) outside the window: {bad}"); print("BLOCKED:", bad); return 2
+        status.record(SID, status.BLOCKED, f"test date(s) outside the window: {bad}"); print("BLOCKED:", bad); return 2
 
     try:
         g, _, meta = load_study_area()
     except FileNotFoundError as e:
-        status.record("CH3", status.BLOCKED, str(e)); print("BLOCKED:", e); return 2
+        status.record(SID, status.BLOCKED, str(e)); print("BLOCKED:", e); return 2
     aoi_wgs = g.geometry.union_all() if hasattr(g.geometry, "union_all") else g.geometry.unary_union
     try:
         import ee
@@ -105,7 +112,7 @@ def main():
         proj = pj.getInfo(); nominal = float(pj.nominalScale().getInfo())
     except Exception as e:                                   # noqa: BLE001
         msg = f"{type(e).__name__}: {e}"
-        status.record("CH3", status.BLOCKED, msg[:300] + " | " + AUTH_HELP); print("BLOCKED (Earth Engine metadata step):", msg, "\n", AUTH_HELP); return 2
+        status.record(SID, status.BLOCKED, msg[:300] + " | " + AUTH_HELP); print("BLOCKED (Earth Engine metadata step):", msg, "\n", AUTH_HELP); return 2
 
     # ---- 1. metadata / dates / grid
     stamps = [ms_to_date(t) for t in times]
@@ -123,10 +130,11 @@ def main():
     wtr = chirps.window_transform(tr, win_cells); shape = (win_cells[3], win_cells[2])
     weights, touch = chirps.aoi_cell_weights(wtr, shape, aoi)
     wb = chirps.window_bounds(tr, win_cells)
+    AOI_FP, W_FP = RP.aoi_fingerprint(aoi), RP.weights_fingerprint(weights)       # cache reuse needs BOTH to match, not just the cell count
     print(f"[grid] crs={crs} transform={list(tr)[:6]} nominalScale={nominal:.1f} m bands={bands} images in window={n} (expected {len(expected)})")
     print(f"[aoi ] polygon area share inside {shape[0]}x{shape[1]} window = {weights.sum():.4f}; cells touching polygon = {int(touch.sum())} (bbox cells would be {int(np.ceil((aoi.bounds[2]-aoi.bounds[0])/tr.a)+1)}x{int(np.ceil((aoi.bounds[3]-aoi.bounds[1])/abs(tr.e))+1)})")
     if abs(weights.sum() - 1.0) > 1e-6:
-        status.record("CH3", status.BLOCKED, "internal check: AOI not inside the export window"); print("BLOCKED: AOI window check failed"); return 2
+        status.record(SID, status.BLOCKED, "internal check: AOI not inside the export window"); print("BLOCKED: AOI window check failed"); return 2
 
     # ---- 2. exported test images on the native grid
     cell_poly = lambda r, c: [wtr.c + c * wtr.a, wtr.f + (r + 1) * wtr.e, wtr.c + (c + 1) * wtr.a, wtr.f + r * wtr.e]
@@ -142,7 +150,7 @@ def main():
             export_problems.append(f"{d}: {k} images for this date (expected 1)"); not_assessed.append(d.isoformat()); continue
         img = ee.Image(one.first()); p0 = img.select(chirps.BAND)
         exp = ee.Image.cat([p0.toFloat().unmask(chirps.EXPORT_NODATA).rename("precipitation"), p0.mask().toFloat().rename("valid")])
-        dest = PROBE / f"{TAG}_{d:%Y%m%d}_probe.tif"
+        dest = probe / f"{TAG}_{d:%Y%m%d}_probe.tif"
         reused = bool(a.reuse_exports and dest.exists())
         try:
             req = chirps.download_params(crs, wtr, shape)      # crs + crs_transform + dimensions; NO region/scale (ee ignores region when crs_transform is given)
@@ -206,12 +214,12 @@ def main():
     # ---- 3. server-side per-date coverage over the whole window (polygon-weighted) + valid cells per date
     per_date = {}
     srv_err = None
-    cache_path = PROBE / "server_per_date_cache.json"
+    cache_path = probe / "server_per_date_cache.json"
     cache_note = "computed this run"
     if a.reuse_server_cache and not a.skip_all_dates and cache_path.exists():
         try:
             cj = json.loads(cache_path.read_text(encoding="utf-8"))
-            if cj.get("window") == [start, end] and cj.get("cells_touching_aoi") == int(touch.sum()) and cj.get("crs") == crs and len(cj.get("per_date", {})) == len(expected):
+            if RP.probe_cache_matches(cj, start, end, int(touch.sum()), crs, len(expected), AOI_FP, W_FP, expected_dates=[d.isoformat() for d in expected]):
                 per_date = cj["per_date"]; cache_note = f"REUSED from cache written {cj.get('computed_utc')} (not recomputed)"
                 print("[all-dates] re-using saved server results:", cache_note)
             else:
@@ -245,7 +253,7 @@ def main():
             srv_err = f"{type(e).__name__}: {str(e)[:300]}"; print("[all-dates] server-side per-date coverage FAILED:", srv_err)
         if per_date:                                         # checkpoint immediately so a later output failure cannot lose the 153-date results
             try:
-                cache_path.write_text(json.dumps(chirps.json_safe({"dataset": chirps.DATASET_ID, "window": [start, end], "crs": crs, "cells_touching_aoi": int(touch.sum()),
+                cache_path.write_text(json.dumps(chirps.json_safe({"dataset": chirps.DATASET_ID, "window": [start, end], "crs": crs, "cells_touching_aoi": int(touch.sum()), "aoi_fingerprint": AOI_FP, "weights_fingerprint": W_FP,
                                       "computed_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "per_date": per_date}), indent=1), encoding="utf-8")
             except Exception as e:                           # noqa: BLE001
                 print(f"[all-dates] WARNING: could not write server cache: {type(e).__name__}: {e}")
@@ -287,19 +295,19 @@ def main():
     dropped = []
     manifest["server_per_date_source"] = cache_note
     manifest["verdict_at_write"] = {"note": "see chirps_v3_sat_probe.json for the final verdict"}
-    safe("probe_manifest.json", lambda: (PROBE / "probe_manifest.json").write_text(json.dumps(chirps.json_safe(manifest, "$", dropped), indent=2), encoding="utf-8"))
+    safe("probe_manifest.json", lambda: (probe / "probe_manifest.json").write_text(json.dumps(chirps.json_safe(manifest, "$", dropped), indent=2), encoding="utf-8"))
     if dropped: print("[output] manifest: non-JSON objects were DROPPED (types only recorded):", dropped)
-    tab = paths.OUT_TAB / f"{TAG}_probe_dates.csv"
+    tab = OT / f"{TAG}_probe_dates.csv"
     def w_dates():
         with open(tab, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=list(date_rows[0].keys())); w.writeheader(); w.writerows(chirps.json_safe(date_rows))
     safe("dates csv", w_dates)
-    tab2 = paths.OUT_TAB / f"{TAG}_probe_test_images.csv"
+    tab2 = OT / f"{TAG}_probe_test_images.csv"
     def w_tests():
         with open(tab2, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=list(test_rows[0].keys())); w.writeheader(); w.writerows(chirps.json_safe(test_rows))
     if test_rows: safe("test images csv", w_tests)
-    cells_tab = paths.OUT_TAB / f"{TAG}_probe_aoi_cells.csv"
+    cells_tab = OT / f"{TAG}_probe_aoi_cells.csv"
     first_t = next(iter(tested.values()), None)
     def w_cells():
         with open(cells_tab, "w", newline="", encoding="utf-8") as f:
@@ -307,7 +315,7 @@ def main():
             for r, c in zip(rows, cols):
                 w.writerow([int(r), int(c), wtr.c + (c + .5) * wtr.a, wtr.f + (r + .5) * wtr.e, round(float(weights[r, c]), 5)] + [int(tested[d]["valid"][r, c]) for d in tested])
     safe("aoi cells csv", w_cells)
-    fig_path = paths.OUT_FIG / f"{TAG}_probe_cells.png"
+    fig_path = OF / f"{TAG}_probe_cells.png"
     def w_fig():
         import matplotlib; matplotlib.use("Agg")
         import matplotlib.pyplot as plt
@@ -344,25 +352,25 @@ def main():
     if server_problems: L += ["Server-side verification problems:"] + [f"- {x}" for x in server_problems[:20]] + [""]
     L += ["### Export request used (native-grid window)", f"- `crs`={crs}, `crs_transform`={list(wtr)[:6]}, `dimensions`=[{shape[1]}, {shape[0]}] (width, height); no `region`, no `scale`. Expected window bounds {list(wb)}.",
           "- Earth Engine implements this as a re-grid onto the SAME 0.05 degree lattice (offset by whole cells); values are checked against native cell-centre samples, not assumed identical.", ""]
-    L += ["### Exported test images (actual files in data/external/rainfall/chirps_v3_daily/probe/)", "| date | AOI area coverage | valid cells | missing cells | zero-mm valid cells | sentinel cells |", "|---|---|---|---|---|---|"]
+    L += [f"### Exported test images (actual files in {probe}/)", "| date | AOI area coverage | valid cells | missing cells | zero-mm valid cells | sentinel cells |", "|---|---|---|---|---|---|"]
     for r in test_rows: L.append(f"| {r['date']} | {r['aoi_area_coverage']:.1%} | {r['cells_valid']}/{r['cells_touching_aoi']} | {r['cells_missing']} | {r['valid_cells_zero_mm']} | {r['sentinel_cells']} |")
     L += ["", "NoData handling: masked pixels were exported as -9999 together with an explicit 0/1 valid band; consistency check = valid band is 0/1, every masked cell holds -9999, no valid cell holds -9999, "
           "no NaN, no negative rainfall, plus a server-side sample at cell centres. Genuine 0 mm in valid cells is counted separately and kept as 0.", ""]
     if xchk: L += ["Server (EE weighted-mean mask) vs local exact-geometry coverage on test dates: " + "; ".join(f"{d}: {s if s is None else round(s, 4)} vs {l:.4f}" for d, (s, l) in xchk.items()), ""]
     if per_date:
         miss_days = [r["date"] for r in date_rows if not r["meets_threshold"]]
-        L += [f"Per-date table (valid/missing cells for every date): `outputs/tables/{TAG}_probe_dates.csv`. Dates below threshold: {len(miss_days)} {miss_days[:10]}", ""]
+        L += [f"Per-date table (valid/missing cells for every date): `{tab}`. Dates below threshold: {len(miss_days)} {miss_days[:10]}", ""]
     L += ["## Caveats (recorded, not resolved)", f"- Day definition: {chirps.DAY_DEFINITION}", f"- Licence: {lic}",
           "- References: " + "; ".join(f"{k}: {v}" for k, v in chirps.REFERENCES.items()),
           "- DAILY_RNL (ERA5-split) was NOT examined or used; its catalog metadata must be verified separately before any later sensitivity run. SAT and RNL are never combined.",
-          "- Outputs are kept apart from IMD (data/external/rainfall/chirps_v3_daily/ vs imd_gridded_daily/).", ""]
+          f"- Outputs are kept apart from IMD (this run: {rp['base']} vs imd_gridded_daily/). Event `{a.event}`, status id `{SID}`.", ""]
     L += ["## Provenance of this run", f"- Test rasters: " + ("; ".join(f"{m['date']}: {m['provenance']}" for m in manifest["files"]) or "none"),
           f"- Per-date server results: {cache_note}", f"- Output-writing failures: {output_errors or 'none'}", ""]
-    rep = paths.OUT_REP / f"{TAG}_probe.md"; rep.write_text("\n".join(L), encoding="utf-8")
-    (paths.OUT_REP / f"{TAG}_probe.json").write_text(json.dumps(chirps.json_safe({"verdict": verdict, "reasons": why, "min_coverage": a.min_coverage, "crs": crs, "transform": list(tr)[:6],
+    rep = OR / f"{TAG}_probe.md"; rep.write_text("\n".join(L), encoding="utf-8")
+    (OR / f"{TAG}_probe.json").write_text(json.dumps(chirps.json_safe({"verdict": verdict, "reasons": why, "min_coverage": a.min_coverage, "crs": crs, "transform": list(tr)[:6],
         "window": {"start": start, "end": end, "n_dates": len(expected)}, "cells_touching_aoi": ncell, "test_coverage": test_cov, "test_dates_not_assessed": not_assessed, "server_problems": server_problems[:50], "temporal_completeness_verified": not (export_problems or server_problems), "temporal_completeness": comp, "continuity": cont_s, "export_problems": export_problems, "output_errors": output_errors, "per_date_source": cache_note}), indent=2), encoding="utf-8")
     state = status.PARTIAL if verdict != "STOP" else status.BLOCKED
-    status.record("CH3", state, f"probe verdict {verdict}: " + ("; ".join(why)[:300] if why else "coverage + mask checks passed; awaiting user review before bulk download"),
+    status.record(SID, state, f"probe verdict {verdict}: " + ("; ".join(why)[:300] if why else "coverage + mask checks passed; awaiting user review before bulk download"),
                   files=[rep, tab, cells_tab], seconds=time.time() - t0)
     print(f"\n=== VERDICT: {verdict} ===")
     for x in why: print(" -", x)

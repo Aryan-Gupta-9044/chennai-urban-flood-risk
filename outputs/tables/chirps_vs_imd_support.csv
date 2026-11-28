@@ -1,0 +1,4 @@
+imd_row,imd_col,imd_centre_lon,imd_centre_lat,aoi_share,imd_valid_days,imd_days_in_window,chirps_footprint_support,chirps_cells_in_footprint,chirps_cells_in_aoi_part
+101,55,80.25,13.25,0.2805,153,153,0.7,24,12
+102,55,80.25,13.0,0.6984,0,153,1.0,36,22
+103,55,80.25,12.75,0.0211,0,153,0.3,12,2

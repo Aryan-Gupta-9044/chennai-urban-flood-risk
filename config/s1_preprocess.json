@@ -1,0 +1,28 @@
+{
+  "_comment": "M4C Sentinel-1 date-level preprocessing parameters. Changing ANY value here changes the run signature, so stale outputs are detected and never silently reused. Preprocessing only: no flood classification, no baseline designation, no validation.",
+  "version": "M4C-1",
+  "event": "2021_nov",
+  "collection": "COPERNICUS/S1_GRD",
+  "coverage_csv": "outputs/tables/s1_2021_date_level_coverage.csv",
+  "dates": ["2021-09-05", "2021-09-17", "2021-09-29", "2021-10-11", "2021-10-23", "2021-11-04", "2021-11-16", "2021-11-28"],
+  "first_live_date": "2021-11-16",
+  "expected": {"platform": "SENTINEL-1A", "pass": "DESCENDING", "rel_orbit": 92, "mode": "IW", "pols": ["VV", "VH"], "n_slices": 2},
+  "overlap_rule": "linear_power_mean_of_valid_slices",
+  "resampling": {
+    "default": "linear_area_mean",
+    "intermediate_10m": "slice -> UTM 44N 10 m lattice aligned to the master grid (nearest neighbour, geometric only), linear power",
+    "to_30m": "exact 3x3 block mean of linear power (reduceResolution mean), then 10*log10 -> dB",
+    "comparison_options": ["point_db", "linear_area_mean", "linear_area_mean_focal_median"],
+    "focal_median_radius_m": 30
+  },
+  "min_valid_fraction": 0.5,
+  "nodata": -9999.0,
+  "qa": {"min_aoi_valid_pct": 95.0, "extreme_low_db": -40.0, "extreme_high_db": 5.0, "power_ratio_tol": 0.05, "seam_width_m": 90.0, "seam_flag_db": 2.0, "max_download_bytes": 45000000},
+  "earth_engine_processing_claims": {
+    "applied_by_collection_per_catalog_page": ["thermal noise removal", "radiometric calibration", "terrain correction (SRTM 30 m; ASTER above 60 deg latitude)", "conversion to dB"],
+    "border_noise_removal": "NOT confirmed from the catalog page text; checked empirically (edge/seam diagnostics), not assumed",
+    "radiometric_terrain_flattening": "NOT applied and NOT claimed (ellipsoid-based terrain correction only)",
+    "incidence_angle": "angle band is ~20 km pixels (approximate); NOT used to normalise backscatter in M4C",
+    "not_repeated_here": "no extra calibration, noise removal or terrain correction is applied"
+  }
+}

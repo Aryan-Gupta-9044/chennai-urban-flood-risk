@@ -1,0 +1,22 @@
+{
+  "_comment": "TEMPLATE ONLY - every value is UNCONFIRMED. Fill from the ACTUAL file and its documented source; never from memory. Software does not verify these statements.",
+  "reference_id": "UNCONFIRMED",
+  "name": "UNCONFIRMED",
+  "producer": "UNCONFIRMED",
+  "source": "UNCONFIRMED (URL / citation / how obtained)",
+  "obtained_on": "UNCONFIRMED (YYYY-MM-DD)",
+  "licence": "UNCONFIRMED",
+  "licence_permits_derived_stats": null,
+  "kind": "UNCONFIRMED (extent_raster | extent_polygons | points | depth_points)",
+  "obs_date": "UNCONFIRMED (YYYY-MM-DD)  [or obs_date_start / obs_date_end]",
+  "obs_time_of_day": null,
+  "sensor_family": "UNCONFIRMED",
+  "independent_of_s1": null,
+  "production_method_documented": null,
+  "method_summary": "UNCONFIRMED",
+  "positional_accuracy_m": null,
+  "class_meaning": {"1": "UNCONFIRMED", "0": "UNCONFIRMED"},
+  "declared_crs": null,
+  "x_column": null,
+  "y_column": null
+}
