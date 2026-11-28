@@ -229,13 +229,13 @@
       "state": "PARTIALLY COMPLETED",
       "message": "IMD valid cells 1/3; comparison is side-by-side only, not validation",
       "files": [
-        "C:\\Users\\aryan\\Downloads\\chennai-flood-risk-v2.3-dev\\chennai-flood-risk\\outputs\\reports\\chirps_vs_imd_comparison.md"
+        "outputs\\cmp_chirps_imd_run_20261128_01\\reports\\chirps_vs_imd_comparison.md"
       ],
       "datasets": [],
       "requirements": [],
       "extra": {},
-      "updated": "2026-11-24T14:35:16",
-      "seconds": 1.1
+      "updated": "2026-11-28T00:33:26",
+      "seconds": 2.2
     },
     "S1DC": {
       "id": "S1DC",
@@ -333,6 +333,69 @@
       "extra": {},
       "updated": "2026-11-24T19:18:23",
       "seconds": 2.4
+    },
+    "E": {
+      "id": "E",
+      "title": "Data integration and feature table",
+      "state": "PARTIALLY COMPLETED",
+      "message": "Feature stack with 2 layers (elevation_m, slope_deg). Absent: landcover_class, builtup_fraction, rain_event_total_mm. Still missing for the full design: flow_accumulation, twi, distance_to_drainage, drainage_density, distance_to_roads, population, relief_shelters.",
+      "files": [
+        "data/processed/feature_stack_utm44n_30m.tif",
+        "outputs/tables/feature_table_sample.csv",
+        "outputs/reports/data_quality_report.json",
+        "outputs/reports/data_quality_report.md"
+      ],
+      "datasets": [
+        {
+          "name": "Feature stack",
+          "kind": "DERIVED",
+          "source": "Modules B, C, D",
+          "path": "data/processed/feature_stack_utm44n_30m.tif"
+        }
+      ],
+      "requirements": [
+        "flow_accumulation: needs hydrologically conditioned DEM (e.g. pysheds/WhiteboxTools) - planned next",
+        "twi: derived from flow accumulation + slope - planned next",
+        "distance_to_drainage: needs OSM waterways/drains via Overpass - planned next",
+        "drainage_density: needs OSM waterways - planned next",
+        "distance_to_roads: needs OSM roads - planned next",
+        "population: needs WorldPop/Census ward population - not yet acquired",
+        "relief_shelters: needs shelter locations (OSM / GCC list) - not yet acquired",
+        "flood_labels: needs Sentinel-1 flood extents (Module F, requires Google Earth Engine authentication)"
+      ],
+      "extra": {
+        "features": [
+          "elevation_m",
+          "slope_deg"
+        ]
+      },
+      "updated": "2026-11-28T00:34:53",
+      "seconds": 0.3
+    },
+    "C2_RUN_20261128_01": {
+      "id": "C2_RUN_20261128_01",
+      "title": "C2_RUN_20261128_01",
+      "state": "PARTIALLY COMPLETED",
+      "message": "chirps_v3_daily/2015_nov_dec: 153/153 days OK; event total COMPUTED (all event-window days valid).",
+      "files": [
+        "outputs\\chirps_v3_2015_run_20261128_01\\tables\\rainfall_chirps_v3_daily_2015_nov_dec_daily_series.csv",
+        "data/processed/rainfall_chirps_v3_2015_run_20261128_01/chirps_v3_daily/2015_nov_dec_event_total_mm_native.tif",
+        "outputs\\chirps_v3_2015_run_20261128_01\\tables\\rainfall_chirps_v3_daily_2015_nov_dec_max_k_day.csv",
+        "outputs\\chirps_v3_2015_run_20261128_01\\tables\\rainfall_chirps_v3_daily_2015_nov_dec_antecedent_before_s1.csv",
+        "outputs\\chirps_v3_2015_run_20261128_01\\figures\\rainfall_chirps_v3_daily_2015_nov_dec_daily_maps.png",
+        "outputs\\chirps_v3_2015_run_20261128_01\\figures\\rainfall_chirps_v3_daily_2015_nov_dec_event_total_native.png",
+        "outputs\\chirps_v3_2015_run_20261128_01\\figures\\rainfall_chirps_v3_daily_2015_nov_dec_timeseries.png",
+        "outputs\\chirps_v3_2015_run_20261128_01\\figures\\rainfall_chirps_v3_daily_2015_nov_dec_wettest_day_native.png",
+        "outputs\\chirps_v3_2015_run_20261128_01\\reports\\rainfall_chirps_v3_daily_2015_nov_dec_report.md"
+      ],
+      "datasets": [],
+      "requirements": [],
+      "extra": {
+        "source": "chirps_v3_daily",
+        "native_resolution": "0.05 deg (native; Earth Engine grid 0.0500000007 deg); the files are a clipped window of the native grid, not resampled"
+      },
+      "updated": "2026-11-28T00:42:36",
+      "seconds": 3.9
     }
   }
 }

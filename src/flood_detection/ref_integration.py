@@ -184,6 +184,28 @@ def _cov_finding(cov, findings, what, n_hit=None):
     findings.append(F("SPATIAL_COVERAGE", zero if cov <= 0 else WARN if cov < DEFAULTS["full_coverage"] else PASS, f"{what} covers {100 * cov:.1f}% of the AOI (bounding-box footprint; a bounding box is not the mapped area)", coverage=round(cov, 4)))
 
 
+AREA_CRS_EPSG = 32644  # UTM zone 44N (metres): the project analysis CRS; Chennai (~80.2 E) lies in zone 44 (78-84 E)
+
+
+def _polygon_areas_m2(geoms, crs):
+    """Polygon areas in m2 for REPORTING only. Geographic input within valid lon/lat limits is projected to AREA_CRS_EPSG; projected input is
+    returned in its own CRS units (m2 when the CRS is metric); anything that cannot be projected returns None. Geometries are never modified."""
+    import geopandas as gpd
+    if crs is None or len(geoms) == 0: return None
+    if not crs.is_geographic: return geoms.area
+    b = geoms.total_bounds
+    if not np.isfinite(b).all() or b[0] < -180 or b[2] > 180 or b[1] < -90 or b[3] > 90: return None
+    return gpd.GeoSeries(geoms.values, index=geoms.index, crs=crs).to_crs(AREA_CRS_EPSG).area
+
+
+def _zero_area_count(geoms):
+    """Number of degenerate polygons: exactly zero area in the geometry's own coordinates. This is a topological test, not a measurement, so it is
+    deliberately done in the native CRS (a polygon collinear in lon/lat is not collinear after projection, so a projected test would change its meaning).
+    shapely.area is used because GeoSeries.area warns for geographic CRS."""
+    import shapely
+    return int((shapely.area(geoms.values) == 0).sum())
+
+
 def _geom_checks(gdf, findings, crs):
     n = len(gdf); g = gdf.geometry; empty = int((g.isna() | g.is_empty).sum()); gg = g[~(g.isna() | g.is_empty)]
     if n == 0: findings.append(F("GEOMETRY", FAIL, "no features")); return None
@@ -195,7 +217,8 @@ def _geom_checks(gdf, findings, crs):
     if len(ks) != 1 or "other" in ks: findings.append(F("GEOMETRY_TYPE", FAIL, f"mixed or unsupported geometry types {types}")); return None
     kind = ks.pop()
     if kind == "polygons":
-        z = int((gg.area == 0).sum()); findings.append(F("POLYGON_AREA", WARN if z else PASS, f"{z} zero-area polygon(s)" if z else "no zero-area polygons"))
+        z = _zero_area_count(gg); a_m2 = _polygon_areas_m2(gg, crs); ev = {} if a_m2 is None else {"min_area_m2": float(a_m2.min()), "total_area_m2": float(a_m2.sum())}
+        findings.append(F("POLYGON_AREA", WARN if z else PASS, f"{z} zero-area polygon(s)" if z else "no zero-area polygons", **ev))
     elif kind == "points":
         dup = int(gg.apply(lambda p: p.wkt).duplicated().sum()); findings.append(F("DUPLICATE_POINTS", WARN if dup else PASS, f"{dup} duplicate point location(s)" if dup else "no duplicate point locations"))
     if crs is not None and crs.is_geographic:

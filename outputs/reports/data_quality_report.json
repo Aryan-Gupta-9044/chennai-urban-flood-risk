@@ -1,0 +1,63 @@
+{
+  "grid": {
+    "crs": "EPSG:32644",
+    "resolution_m": 30,
+    "shape": [
+      1416,
+      726
+    ]
+  },
+  "features_present": [
+    "elevation_m",
+    "slope_deg"
+  ],
+  "per_feature": [
+    {
+      "feature": "elevation_m",
+      "present": true,
+      "aligned_with_master_grid": true,
+      "resolution_m": 30.0,
+      "valid_pct_inside_study_area": 100.0,
+      "min": -16.819625854492188,
+      "max": 53.76460647583008,
+      "std": 5.483282566070557
+    },
+    {
+      "feature": "slope_deg",
+      "present": true,
+      "aligned_with_master_grid": true,
+      "resolution_m": 30.0,
+      "valid_pct_inside_study_area": 100.0,
+      "min": 0.0,
+      "max": 33.312904357910156,
+      "std": 1.6104751825332642
+    },
+    {
+      "feature": "landcover_class",
+      "present": false,
+      "reason": "landcover_class_utm44n_30m.tif not found (upstream module missing/blocked)"
+    },
+    {
+      "feature": "builtup_fraction",
+      "present": false,
+      "reason": "builtup_fraction_utm44n_30m.tif not found (upstream module missing/blocked)"
+    },
+    {
+      "feature": "rain_event_total_mm",
+      "present": false,
+      "reason": "rainfall_event_total_mm_utm44n_30m.tif not found (upstream module missing/blocked)"
+    }
+  ],
+  "missing_features": {
+    "flow_accumulation": "needs hydrologically conditioned DEM (e.g. pysheds/WhiteboxTools) - planned next",
+    "twi": "derived from flow accumulation + slope - planned next",
+    "distance_to_drainage": "needs OSM waterways/drains via Overpass - planned next",
+    "drainage_density": "needs OSM waterways - planned next",
+    "distance_to_roads": "needs OSM roads - planned next",
+    "population": "needs WorldPop/Census ward population - not yet acquired",
+    "relief_shelters": "needs shelter locations (OSM / GCC list) - not yet acquired",
+    "flood_labels": "needs Sentinel-1 flood extents (Module F, requires Google Earth Engine authentication)"
+  },
+  "rows_in_complete_table": 483727,
+  "rows_in_sample_csv": 20000
+}

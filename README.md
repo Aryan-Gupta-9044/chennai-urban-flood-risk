@@ -3,164 +3,167 @@
 **Project:** Integrated Geospatial Framework for Urban Flood Risk Mapping and Prediction Using Multi-Source Data
 **Study area:** Chennai, Tamil Nadu, India
 **Project reference:** B794
-**Repository:** `chennai-urban-flood-risk`
+**Release documentation baseline:** 28 November 2026
+**Current research paper:** `paper/main.tex` and `paper/main.pdf` (working draft; not submission-ready)
 
-## 1. Project overview
+## Project purpose
 
-This project develops a reproducible geospatial framework for investigating urban flood-related conditions in Chennai using multi-source Earth observation, terrain, rainfall, hydrological and supporting spatial data.
+This repository develops a reproducible geospatial workflow for examining urban flood-related conditions in Chennai using multi-source data. It brings together Sentinel-1 radar-derived water-related candidates, rainfall context, terrain and susceptibility indicators, exposure/vulnerability datasets, reported flood references, exploratory ward analytics, and a dashboard.
 
-The intended framework brings together:
+The framework is **evidence-aware**: data products with different spatial/temporal support and confidence are kept distinct. A candidate signal, proxy, reported location, or exploratory model output is not automatically treated as observed flood extent, validated risk, or a flood prediction.
 
-- Sentinel-1 SAR observations and water-related candidate analysis.
-- Terrain and hydrological indicators derived from elevation data.
-- Rainfall observations and antecedent rainfall analysis.
-- Flood-reference evidence and independent validation readiness.
-- Exposure and vulnerability assessment.
-- Integrated flood-risk assessment and, subject to sufficient evidence, prediction.
+## Current implementation at a glance
 
-The project is being developed incrementally. Implemented analytical modules must not be interpreted as a completed, independently validated flood-risk or prediction system.
+| Workstream | Current state | Important qualification |
+|---|---|---|
+| S1WC-2 Sentinel-1 candidate workflow | Implemented and tested | Candidate water-related signal; not confirmed floodwater |
+| SUS-1 susceptibility | Implemented and reviewed | Provisional OSM-derived AOI; relative susceptibility index, not flood probability |
+| Rainfall / CHIRPS / IMD context | Implemented with QA workflows | CHIRPS is coarse; daily observation convention and source limitations must be disclosed |
+| DEP2 reference, exposure and vulnerability integration | Implemented locally and tested | Reference quality varies; integration is not independent validation |
+| ML-EXP-1 exploratory ward analysis | Implemented | Descriptive/exploratory; no robust supervised flood prediction justified |
+| ML-EXP-1.1 statistical review | Implemented and reproducibility rerun completed | Corrected inference weakens nominal findings; presence-background results are not calibrated |
+| S1TC-1 multi-date temporal context | Implemented | Descriptive temporal context across eight dates; no causal inference |
+| Streamlit dashboard | Implemented; user-reported visual check completed | Dashboard presentation does not establish scientific validity |
+| Integrated validated flood-risk / prediction model | Not established | Requires qualified independent references, accepted exposure inputs and defensible validation design |
 
-## 2. Current implementation status
+For the detailed task history and decision records, see `PROJECT_MASTER_CONTROL.md`, `docs/final/`, and `docs/final02/`. The master-control file contains historical task/status entries; read this README and the dated FINAL-02 evidence alongside it rather than assuming every older action item is still current.
 
-### Implemented technical foundations
+## Repository layout
 
-| Workstream | Current status |
-|---|---|
-| Sentinel-1 water-candidate analysis (S1WC) | Implemented; S1WC-2 technical integration accepted |
-| Sentinel-1 persistence and antecedent analysis | Implemented and tested |
-| Rainfall and CHIRPS workflows | Implemented with workflow isolation and date-source corrections |
-| IMD rainfall integration | Implemented provisionally; interpretation and validation limitations remain |
-| Hydrological terrain analysis | Implemented and tested |
-| Susceptibility mapping (SUS-1) | Baseline implemented and accepted with qualifications |
-| Susceptibility sensitivity review | Implemented; independent review findings documented |
-| Flood-reference integration checks | R0-R2 integration and automated checks implemented |
-| DEP-1 exposure and vulnerability | Requirements and architecture work in progress |
-| Independent flood-reference validation | Unresolved; evidence acquisition and qualification ongoing |
-| Integrated flood-risk assessment | Not yet validated |
-| Flood prediction | Not yet implemented as a validated predictive model |
+```text
+config/                 Workflow configuration and source/evidence registers
+dashboard/              Streamlit app, sections, libraries, static assets
+docs/                   Methods, reviews, integration evidence and release guides
+outputs/                Selected reports, tables and figures (not raw-data archive)
+paper/                  IEEE-style manuscript draft, bibliography and figures
+scripts/                Pipeline, preprocessing, QA, analytics and review scripts
+src/                    Python implementation modules
+tests/                  Automated tests
+```
 
-For the authoritative workstream status, decisions, evidence qualifications and next actions, consult `PROJECT_MASTER_CONTROL.md`.
+Local backups, raw/large geospatial inputs, temporary SHIVE package assemblies, acquisition caches and selected rerun outputs are intentionally excluded from Git.
 
-## 3. Scientific interpretation and limitations
+## Environment and setup
 
-The project distinguishes between:
+Use Python from the repository's project virtual environment on Windows:
 
-- **Susceptibility:** relative spatial predisposition based on selected terrain and environmental indicators.
-- **Hazard:** the occurrence and characteristics of a potentially damaging flood event.
-- **Exposure:** people, buildings, infrastructure and assets located in potentially affected areas.
-- **Vulnerability:** the potential degree of harm to exposed people and assets.
-- **Risk:** the consequences arising from the interaction of hazard, exposure and vulnerability.
-- **Prediction:** estimation of future conditions using a separately specified and evaluated predictive approach.
+```powershell
+.\.venv\Scripts\python.exe scripts\check_environment.py
+```
 
-A susceptibility index is not a flood map, observed inundation extent, flood probability or validated risk estimate.
+Install dependencies only after reviewing the repository's dependency files and your environment. Dashboard and DEP2 have additional requirement files:
 
-Important current qualifications include:
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements-dashboard.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements-dep2.txt
+```
 
-- Independent, georeferenced flood-reference data sufficient for quantitative validation have not yet been established.
-- Sentinel-1 water-related candidates are not automatically confirmed floodwater.
-- Terrain-derived drainage is not a verified stormwater infrastructure inventory.
-- The HAND implementation is a proxy and must not be interpreted as fully validated flow-path HAND.
-- The elevation data and derived indicators have known limitations, including surface-model effects and possible artefacts.
-- CHIRPS has a coarse native spatial resolution relative to the study area and is used with appropriate spatial limitations.
-- Some indicators are correlated; equal weighting and index interpretation require explicit qualification.
-- The study-area boundary is provisional and must not be presented as an official administrative boundary without verification.
-- Excluded or NoData areas must not be interpreted as zero susceptibility or zero risk.
+These commands are setup examples; use the project lock/requirements state and documented environment appropriate to your machine. Do not install cloud-only or optional packages unless that workflow requires them.
 
-No flood-classification accuracy, predictive accuracy or independent validation performance should be claimed without suitable reference data and a documented evaluation.
+## Run the dashboard
 
-## 4. Repository structure
+From the repository root:
 
-The principal project directories include:
+```powershell
+& ".\.venv\Scripts\python.exe" -m streamlit run dashboard\app.py
+```
 
-| Directory | Purpose |
-|---|---|
-| `src/` | Reusable analytical modules |
-| `scripts/` | Workflow entry points and processing utilities |
-| `config/` | Versioned workflow and parameter configurations |
-| `tests/` | Automated unit, integration and safeguard tests |
-| `docs/` | Methodology, technical reports and research documentation |
-| `data/` | Data organisation; raw and processed datasets are generally excluded from Git |
-| `outputs/` | Selected figures, tables and reports |
-| `dashboard/` | Project dashboard components |
+Alternatively, use the supplied launcher if present:
 
-Generated datasets, local caches, credentials, temporary package assemblies and large source-data archives should not be committed indiscriminately.
+```powershell
+.\run_dashboard.ps1
+```
 
-## 5. Environment and testing
+The dashboard uses the local processed outputs and configuration available in the checkout. A clean checkout without the corresponding data products may show unavailable-data states; do not interpret missing layers as zero values.
 
-The project uses Python and a project-local virtual environment on the Windows development machine.
+See `docs/release/DASHBOARD_GUIDE.md` and `docs/release/DASHBOARD_SCREENSHOTS.md`.
 
-Activate or invoke the project environment from the repository root.
+## Run tests
 
-Run the automated test suite:
+The latest recorded complete local Windows test run, excluding the temporary duplicate package assembly from pytest discovery, was:
+
+- **569 passed**
+- **1 skipped**
+- **0 failed**
+- **3,508 warnings**
+- Command:
+
+```powershell
+& ".\.venv\Scripts\python.exe" -m pytest -q --ignore=shive_upload_parts_20261126_093923
+```
+
+The temporary assembly is local-only and ignored by Git. In a clean checkout where it is absent, the ordinary command is:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-The latest local verification, with the temporary `shive_upload_parts_20261126_093923` package assembly excluded from test discovery, produced:
+Warnings included a GeoPandas/Shapely `unary_union` deprecation at `scripts/s1_preprocess_2021.py:294`. A passing test suite verifies software behavior covered by those tests; it does not independently validate the scientific interpretation or the flood reference data.
 
-- **488 passed**
-- **1 skipped**
-- **0 failed**
+See `docs/release/TESTING_AND_REPRODUCIBILITY.md`.
 
-The test run also reported dependency deprecation warnings and geographic-CRS area warnings. These are documented technical-review items; a passing test suite does not independently establish scientific validity.
+## Main workflow entry points
 
-The temporary package assembly is not part of the intended repository. In a clean checkout where it is absent, the ordinary test command above should be used.
+The repository contains multiple stage-specific scripts. Start with the configuration and documentation before running a stage. Common entry points include:
 
-## 6. Reproducibility and data management
+- `scripts/run_pipeline.py` — core pipeline orchestration.
+- `scripts/dep2_run.py` — DEP2 reference/exposure/vulnerability workflow.
+- `scripts/build_susceptibility_stack.py` — SUS-1 stack construction.
+- `scripts/s1_preprocess_2021.py` and `scripts/s1_preprocess_persistence.py` — Sentinel-1 preprocessing and persistence.
+- `scripts/rainfall_workflow.py` — rainfall workflow.
+- `scripts/build_s1_temporal_context.py` — multi-date radar temporal context.
+- `scripts/build_ml_review.py` — ML-EXP-1.1 review.
+- `scripts/verify_dashboard.py` — dashboard verification helper.
 
-The project uses configuration files, source-data manifests, checksums, processing reports and automated tests to support reproducibility.
+See `docs/release/COMPLETE_PIPELINE_GUIDE.md` for stage order, commands to inspect, and safeguards. Do not run a full pipeline blindly: confirm inputs, configuration, output directory and overwrite behavior first.
 
-When reproducing a workflow:
+## Scientific interpretation and limitations
 
-1. Use the documented project environment and configuration.
-2. Verify source-data provenance, dates, spatial reference systems and licensing.
-3. Preserve original inputs.
-4. Use distinct output locations for new runs.
-5. Retain run metadata, checksums and processing reports.
-6. Distinguish downloaded observations, derived products, proxies and reference evidence.
-7. Record blocked, incomplete or uncertain processing honestly.
+- The study-area boundary is provisional and OSM-derived, not an official GCC boundary.
+- Sentinel-1 class/candidate signals are not confirmed floodwater observations.
+- GLO-30 is a digital surface model (DSM), not a bare-earth DTM.
+- HAND is an Euclidean-nearest-drainage proxy, not flow-path HAND.
+- CHIRPS has coarse native spatial support; it must not be described as ward-scale rainfall observation.
+- SUS-1 is a relative susceptibility index, not a flood probability or validated flood-risk map.
+- NoData / excluded cells mean **not assessed**, not zero or low susceptibility.
+- DEP2 reference evidence has varying quality and does not currently establish an independent ground-truth dataset.
+- ML outputs are exploratory; no robust supervised flood prediction is justified by the current evidence.
+- Integrated validated risk and predictive performance claims are not established.
 
-Raw data and large generated geospatial files are generally excluded from Git through `.gitignore`. Their acquisition and provenance should be documented separately.
+See `docs/release/SCIENTIFIC_LIMITATIONS.md` and the evidence decision log.
 
-## 7. Documentation and project control
+## Research paper
 
-Start with these documents:
+The current manuscript is `paper/main.tex`, with PDF `paper/main.pdf`. It is a working IEEE-style research draft titled:
 
-- `PROJECT_MASTER_CONTROL.md` — current project baseline, ownership, verified findings, decisions, limitations and action register.
-- `docs/susceptibility_framework.md` — SUS-1 methodology and interpretation.
-- `docs/susceptibility_review_report.md` — independent technical review of susceptibility sensitivity and ranking.
-- `docs/s1_water_candidates_review.md` — Sentinel-1 water-candidate review.
-- `docs/s1_water_candidates_v2.md` — updated water-candidate methodology and documentation.
-- `PATCH_NOTES.md` — recent rainfall workflow correction notes.
+> What Reported Floods Can and Cannot Teach: An Evidence-Aware Multi-Source Framework for Urban Flood Assessment in Chennai, India
 
-Other reports and supporting records are maintained under `docs/` and selected `outputs/` subdirectories.
+The author block still contains placeholders. Bibliographic verification, evidence wording, boundary provenance, supervisor approval, acknowledgements and venue requirements remain before submission. The previous draft `paper/main_v1_final01.*` is retained for history and must not be mistaken for the current version.
 
-## 8. Development roadmap
+See `docs/release/PAPER_PREPARATION_CONTEXT.md`.
 
-The remaining development is organised around:
+## Data, licensing and responsible redistribution
 
-1. Finalising and approving DEP-1 exposure and vulnerability requirements.
-2. Implementing and testing exposure modules with verified data and provenance.
-3. Qualifying independent flood-reference observations and spatial evidence.
-4. Evaluating whether the available reference data support quantitative validation.
-5. Developing a defensible integrated risk framework only when its component evidence and assumptions are sufficiently established.
-6. Investigating predictive modelling only after suitable temporal data, target definitions, independent evaluation and leakage safeguards are available.
-7. Improving the dashboard, reporting, reproducibility and publication documentation.
+Do not commit raw source archives or restricted documents merely because they were used locally. In particular, CDMP 2026/2024 PDFs marked `redistribute:false` must not be redistributed. Preserve source URLs, licences, access dates, checksums and acquisition notes in provenance registers. Use the source manifests and `docs/final/` / `docs/final02/` evidence rather than copying restricted files into Git.
 
-Implementation status and priorities are maintained in `PROJECT_MASTER_CONTROL.md`; this roadmap does not imply that the remaining stages are complete.
+## Release integrity
 
-## 9. Research and publication integrity
+Before committing or publishing:
 
-The project prioritises reproducibility, transparent assumptions, traceable data provenance and scientifically defensible interpretation.
+1. Review `git status` and the exact staged file list.
+2. Exclude local backups, temporary package assemblies, caches, raw datasets, secrets and restricted source files.
+3. Run tests from a clean/appropriate environment.
+4. Inspect diffs, generated reports and paper figures.
+5. Keep documentation claims consistent with evidence statuses.
+6. Do not commit, push or merge without project-owner approval.
 
-All reported results should identify:
+## Team responsibilities
 
-- Data source and observation period.
-- Spatial and temporal resolution.
-- Processing and classification assumptions.
-- Reference-data status.
-- Known limitations and uncertainty.
-- Whether a result is observed, derived, proxy-based, proposed or independently validated.
+- **SHIVE:** implementation, code, tests, packaging and reproducible execution.
+- **Agent 1:** independent research, source/reference verification, provenance/licensing review and methodological assessment.
+- **Project owner:** decisions, acceptance, priorities and release approval.
 
-The framework is intended to become a demonstrable geospatial research product. Publication suitability will depend on the quality of the completed methodology, independent evidence, validation and reproducibility—not simply on the number of implemented modules.
+## Status language
+
+Use `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `READY FOR REVIEW`, `ACCEPTED`, `ACCEPTED WITH QUALIFICATIONS`, `REJECTED`, `SUPERSEDED`, and `UNVERIFIED` precisely. A reported completion is not accepted until its evidence is reviewed.

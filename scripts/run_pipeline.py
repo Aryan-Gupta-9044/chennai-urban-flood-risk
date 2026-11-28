@@ -39,6 +39,12 @@ def main():
     log = get_logger("pipeline_runner")
     t_all = time.time()
     steps = [s for s in STEPS if (not only or s[0] in only or s[0] == "R") and s[0] not in skip]
+    # Module G (legacy RF v0) trains on SAR proxy labels and is RETIRED (docs/final/RF_V0_RETIREMENT.md).
+    # It runs only when explicitly requested with CHENNAI_ALLOW_LEGACY_RF=1; its outputs are never a flood prediction.
+    import os
+    if os.environ.get("CHENNAI_ALLOW_LEGACY_RF") != "1" and any(s[0] == "G" for s in steps):
+        steps = [s for s in steps if s[0] != "G"]
+        log.warning("Module G (legacy RF v0) skipped: retired. Set CHENNAI_ALLOW_LEGACY_RF=1 to run it for traceability only.")
     log.info("=== Chennai flood-risk pipeline: %d steps ===", len(steps))
     for i, (mid, script, to) in enumerate(steps, 1):
         title = dict(S.MODULES).get(mid, "Report")

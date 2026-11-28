@@ -499,4 +499,63 @@ class TestV12PersistenceNamespace(MainBase):
         (r / "outputs" / "s1_2021_persistence_backup").mkdir(); names = {d.name for d in SC.protected_dirs(r, self.ref)}; self.assertTrue({"s1_2021_persistence", "s1_2021_persistence_v1_2", "s1_2021_persistence_backup", "chirps_2021", "reports", "tables", "figures", "maps", "flood_labels"} <= names)
 
 
+class TestPolygonAreaCrs(Base):
+    """REF-AREA-CRS-QA-01: polygon areas are reported in m2 from a projected CRS; the zero-area degeneracy test and all findings are unchanged."""
+    def checks(self, gdf, crs=4326):
+        f = []; kind = RI._geom_checks(gdf, f, RI._crs(crs)); return kind, f, {x["code"]: x for x in f}
+
+    def test_no_geographic_area_warning_on_geographic_polygons(self):
+        import warnings
+        p = poly_file(self.t / "a.geojson", [AOI], driver="GeoJSON")
+        with warnings.catch_warnings():
+            warnings.filterwarnings("error", message="Geometry is in a geographic CRS")
+            r = self.r0(p, kind="extent_polygons")
+        self.assertEqual(self.codes(r, RI.FAIL), []); self.assertIn("POLYGON_AREA", self.codes(r, RI.PASS))
+
+    def test_geographic_input_area_is_metres_squared_and_physically_plausible(self):
+        _, _, d = self.checks(gpd.GeoDataFrame(geometry=[AOI], crs=4326)); ev = d["POLYGON_AREA"]["evidence"]
+        self.assertTrue(1.19e6 < ev["total_area_m2"] < 1.21e6, ev)                         # 0.01 x 0.01 deg at 13 N is about 1085 m x 1106 m
+        self.assertGreater(ev["total_area_m2"], 1e5 * AOI.area)                            # not degrees**2 (1e-4)
+        self.assertEqual(ev["min_area_m2"], ev["total_area_m2"])
+
+    def test_area_matches_independent_utm44n_reprojection_and_is_crs_invariant(self):
+        g = gpd.GeoDataFrame(geometry=[AOI, box(80.20, 13.02, 80.23, 13.05)], crs=4326); ref = float(g.to_crs(32644).area.sum())
+        _, _, d = self.checks(g); self.assertAlmostEqual(d["POLYGON_AREA"]["evidence"]["total_area_m2"], ref, delta=1e-6 * ref)
+        _, _, d2 = self.checks(g.to_crs(32644), 32644); self.assertAlmostEqual(d2["POLYGON_AREA"]["evidence"]["total_area_m2"], ref, delta=1e-6 * ref)
+
+    def test_area_crs_constant_is_the_project_utm44n_metric_crs(self):
+        c = RI._crs(RI.AREA_CRS_EPSG); self.assertEqual(c.to_epsg(), 32644); self.assertFalse(c.is_geographic); self.assertEqual(c.axis_info[0].unit_name, "metre")
+
+    def test_degenerate_polygon_still_warns_in_native_coordinates(self):
+        tri = Polygon([(80.18, 13), (80.19, 13), (80.185, 13)])                           # collinear in lon/lat, NOT exactly collinear after projection
+        _, _, d = self.checks(gpd.GeoDataFrame(geometry=[tri, AOI], crs=4326)); self.assertEqual(d["POLYGON_AREA"]["level"], RI.WARN); self.assertIn("1 zero-area", d["POLYGON_AREA"]["message"])
+
+    def test_findings_levels_and_messages_unchanged_for_valid_polygon(self):
+        _, f, d = self.checks(gpd.GeoDataFrame(geometry=[AOI], crs=4326))
+        self.assertEqual((d["POLYGON_AREA"]["level"], d["POLYGON_AREA"]["message"]), (RI.PASS, "no zero-area polygons")); self.assertEqual(d["COORD_RANGE"]["level"], RI.PASS)
+
+    def test_out_of_range_geographic_coordinates_are_not_projected(self):
+        far = Polygon([(8018, 13), (8019, 13), (8019, 14), (8018, 14)]); _, _, d = self.checks(gpd.GeoDataFrame(geometry=[far], crs=4326))
+        self.assertEqual(d["COORD_RANGE"]["level"], RI.FAIL); self.assertNotIn("min_area_m2", d["POLYGON_AREA"]["evidence"])
+
+    def test_null_and_empty_geometries_do_not_break_the_area_path(self):
+        g = gpd.GeoDataFrame(geometry=[AOI, None, Polygon()], crs=4326); kind, _, d = self.checks(g)
+        self.assertEqual(kind, "polygons"); self.assertEqual(d["GEOMETRY"]["level"], RI.FAIL); self.assertEqual(d["GEOMETRY"]["evidence"]["empty"], 2)
+        self.assertTrue(1.19e6 < d["POLYGON_AREA"]["evidence"]["total_area_m2"] < 1.21e6)
+        _, _, d0 = self.checks(gpd.GeoDataFrame(geometry=[None], crs=4326)); self.assertEqual(d0["GEOMETRY"]["level"], RI.FAIL); self.assertNotIn("POLYGON_AREA", d0)
+
+    def test_empty_frame_and_missing_crs_are_handled(self):
+        kind, f, _ = self.checks(gpd.GeoDataFrame(geometry=[], crs=4326)); self.assertIsNone(kind)
+        f = []; self.assertEqual(RI._geom_checks(gpd.GeoDataFrame(geometry=[AOI]), f, None), "polygons"); self.assertNotIn("min_area_m2", {x["code"]: x for x in f}["POLYGON_AREA"]["evidence"])
+
+    def test_input_geometry_and_crs_are_not_modified(self):
+        g = gpd.GeoDataFrame({"c": [1]}, geometry=[AOI], crs=4326); wkb, crs, b = g.geometry.iloc[0].wkb, g.crs.to_wkt(), tuple(g.total_bounds); self.checks(g)
+        self.assertEqual((g.geometry.iloc[0].wkb, g.crs.to_wkt(), tuple(g.total_bounds)), (wkb, crs, b))
+
+    def test_intake_keeps_original_crs_and_reports_area_without_altering_status(self):
+        p = poly_file(self.t / "a.geojson", [AOI], driver="GeoJSON"); r = self.r0(p, kind="extent_polygons")
+        self.assertEqual(r["info"]["crs"], "EPSG:4326"); self.assertEqual(r["info"]["bounds"], tuple(float(x) for x in AOI.bounds))
+        q = poly_file(self.t / "b.geojson", [AOI], driver="GeoJSON"); self.assertEqual(self.r0(q, kind="extent_polygons")["status"], r["status"])
+
+
 if __name__ == "__main__": unittest.main()
